@@ -1,25 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #20272b;
-  --surface-frost: #f3f6f7;
-  --border-frost: #d4dde2;
-  --muted-grey: #a2a2a2;
-  --brand-blue: #5c7e8f;
-  --brand-deep: #426579;
+  --bg: #ffffff;
+  --surface: #f3f6f7;
+  --border: #d4dde2;
+  --text: #20272b;
+  --text-muted: #556168;
+  --text-subtle: #a2a2a2;
+  --brand: #5c7e8f;
+  --brand-strong: #426579;
+  --brand-hover: #355364;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-frost-surface: var(--surface-frost);
-  --color-frost-border: var(--border-frost);
-  --color-muted-grey: var(--muted-grey);
-  --color-brand-blue: var(--brand-blue);
-  --color-brand-deep: var(--brand-deep);
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-frost-surface: var(--surface);
+  --color-frost-border: var(--border);
+  --color-muted-grey: var(--text-subtle);
+  --color-brand-blue: var(--brand);
+  --color-brand-deep: var(--brand-strong);
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -42,17 +44,11 @@ html {
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg);
+  color: var(--text);
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
 }
 
 .text-balance {

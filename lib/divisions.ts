@@ -4,7 +4,6 @@ export interface ProductCategory {
   title: string;
   description: string;
   group?: string;
-  status: "Planned direction";
 }
 
 export interface DivisionInfo {
@@ -16,7 +15,6 @@ export interface DivisionInfo {
   tagline: string;
   summary: string;
   overview: string;
-  statusNote: string;
   accentColor: string;
   accentSurface: string;
   categories: ProductCategory[];
@@ -29,56 +27,48 @@ export const DIVISIONS: DivisionInfo[] = [
     name: "BinRo Utilities",
     shortName: "Utilities",
     href: "/utilities",
-    tagline: "Everyday technology, made simple.",
-    summary: "Digital tools that help people complete everyday tasks.",
+    tagline: "Practical digital tools for everyday use.",
+    summary: "Simple tools for everyday digital tasks.",
     overview:
-      "Useful digital tools that help people complete everyday tasks more easily, privately and efficiently.",
-    statusNote:
-      "BinRo Utilities is organised as a growing directory under /utilities. Tools are listed here as they are prepared and published—nothing is marked usable until the working tool exists.",
+      "Fast, private browser tools built to complete common tasks without accounts or complexity.",
     accentColor: "#5C7E8F",
     accentSurface: "#F3F6F7",
     categories: [
       {
         title: "Image Tools",
         description:
-          "Browser-based utilities for resizing, compressing, and preparing photographs, signatures, and visual assets.",
+          "Resize, compress, and prepare photographs, signatures, and visual assets directly in the browser.",
         group: "Category A",
-        status: "Planned direction",
       },
       {
         title: "PDF and Document Tools",
         description:
-          "Practical tools for organising, combining, splitting, and preparing everyday documents.",
+          "Organise, combine, split, and prepare everyday documents cleanly.",
         group: "Category B",
-        status: "Planned direction",
       },
       {
         title: "File Conversion",
         description:
-          "Straightforward conversion between common document, image, and data formats.",
+          "Direct conversion between common image, document, and data formats.",
         group: "Category C",
-        status: "Planned direction",
       },
       {
         title: "Text Utilities",
         description:
-          "Formatting, comparison, cleanup, and writing utilities for daily digital work.",
+          "Formatting, comparison, and cleanup tools for daily writing and editing.",
         group: "Category D",
-        status: "Planned direction",
       },
       {
         title: "Calculators",
         description:
-          "Focused financial, academic, unit, and everyday calculation tools designed for clarity.",
+          "Clear financial, academic, and unit calculations without clutter.",
         group: "Category E",
-        status: "Planned direction",
       },
       {
         title: "Productivity Tools",
         description:
-          "Lightweight utilities that reduce friction in recurring personal, study, and professional tasks.",
+          "Lightweight utilities that remove friction from routine tasks.",
         group: "Category F",
-        status: "Planned direction",
       },
     ],
   },
@@ -89,70 +79,59 @@ export const DIVISIONS: DivisionInfo[] = [
     shortName: "Business",
     href: "/business",
     tagline: "Software that helps businesses operate better.",
-    summary:
-      "Applications that help businesses manage and improve their operations.",
+    summary: "Technology that helps businesses work better.",
     overview:
-      "BinRo Business aims to build useful software that helps businesses manage their operations, customers, employees, inventory and workflows.",
-    statusNote:
-      "We are developing our vision for useful business software. Explore the areas of technology we aim to build.",
+      "BinRo Business aims to build clear operational software for managing daily workflows, inventory, customers, teams, and finances.",
     accentColor: "#426579",
-    accentSurface: "#EFF4F6",
+    accentSurface: "#F3F6F7",
     categories: [
       {
         title: "Business management software",
         description:
-          "Structured operational software to help organisations coordinate daily activities, records, and internal processes with clarity.",
-        group: "Core Operations",
-        status: "Planned direction",
+          "Coordinate daily operations, records, and internal processes in one structured system.",
+        group: "Operations",
       },
       {
         title: "Retail and shop management",
         description:
-          "Everyday software designed to help local shops and growing retailers manage daily sales, counter operations, and records.",
-        group: "Commerce & Sales",
-        status: "Planned direction",
+          "Counter sales, billing, and daily store records built for local shops and growing retailers.",
+        group: "Commerce",
       },
       {
         title: "Inventory and stock management",
         description:
-          "Clear stock tracking, reorder visibility, and movement logs across locations and suppliers.",
-        group: "Core Operations",
-        status: "Planned direction",
+          "Track stock levels, reorder thresholds, and supplier movements with clear visibility.",
+        group: "Operations",
       },
       {
         title: "Customer relationship management",
         description:
-          "Organised customer histories, follow-up tracking, and service records built for small and mid-sized teams.",
-        group: "Customers & People",
-        status: "Planned direction",
+          "Organised customer histories, follow-ups, and service records for small and mid-sized teams.",
+        group: "Customers",
       },
       {
         title: "Billing and financial tools",
         description:
-          "Accurate invoicing, payment records, and clear financial summaries tailored to everyday business workflows.",
-        group: "Finance & Records",
-        status: "Planned direction",
+          "Straightforward invoicing, payment tracking, and clean financial summaries.",
+        group: "Finance",
       },
       {
         title: "Employee management",
         description:
-          "Attendance, role assignments, shift coordination, and structured team records.",
-        group: "Customers & People",
-        status: "Planned direction",
+          "Attendance, role coordination, shifts, and structured team records.",
+        group: "People",
       },
       {
         title: "Business reporting and analytics",
         description:
-          "Practical reporting that turns everyday operational records into clearer business visibility.",
-        group: "Intelligence & Insights",
-        status: "Planned direction",
+          "Operational reporting that turns daily activity into clear, readable summaries.",
+        group: "Insights",
       },
       {
         title: "Workflow automation",
         description:
-          "Reliable automation for routine operational steps, reminders, and recurring administrative tasks.",
-        group: "Core Operations",
-        status: "Planned direction",
+          "Dependable automation for recurring administrative steps and reminders.",
+        group: "Operations",
       },
     ],
   },
@@ -162,71 +141,60 @@ export const DIVISIONS: DivisionInfo[] = [
     name: "BinRo Developer",
     shortName: "Developer",
     href: "/developer",
-    tagline: "Tools and infrastructure for people who build technology.",
-    summary:
-      "Developer tools, APIs and services that make building software easier.",
+    tagline: "Tools, APIs and technology for developers.",
+    summary: "Tools and technology for developers.",
     overview:
-      "BinRo Developer aims to give builders reliable primitives, clean interfaces, and practical infrastructure so teams can create, test, integrate, and operate software with less overhead.",
-    statusNote:
-      "These capabilities represent future areas of development for the BinRo developer ecosystem and are not yet publicly launched.",
-    accentColor: "#3D5C6E",
-    accentSurface: "#F0F4F6",
+      "Planned developer primitives, typed SDKs, and clear APIs designed to keep software engineering direct and dependable.",
+    accentColor: "#426579",
+    accentSurface: "#F3F6F7",
     categories: [
       {
         title: "Developer tools",
         description:
-          "Focused utilities for inspection, formatting, schema validation, and everyday engineering workflows.",
-        group: "Build & Test",
-        status: "Planned direction",
+          "Focused utilities for payload inspection, formatting, and schema checks.",
+        group: "Build",
       },
       {
         title: "APIs",
         description:
-          "Predictable, well-structured application interfaces exposing core capabilities for third-party software.",
-        group: "Core Platform",
-        status: "Planned direction",
+          "Predictable application interfaces with consistent conventions and clear contracts.",
+        group: "Platform",
       },
       {
         title: "SDKs",
         description:
-          "Typed client libraries designed to make integration straightforward across web and server environments.",
-        group: "Core Platform",
-        status: "Planned direction",
+          "Typed client libraries designed for straightforward integration across web and server stacks.",
+        group: "Platform",
       },
       {
         title: "Authentication services",
         description:
-          "Reliable identity, session, and access foundations for applications built on the platform.",
-        group: "Core Platform",
-        status: "Planned direction",
+          "Identity, session, and access foundations for applications built on the platform.",
+        group: "Platform",
       },
       {
         title: "Webhooks and integrations",
         description:
-          "Event delivery and structured integration bridges connecting business systems and external services.",
-        group: "Core Platform",
-        status: "Planned direction",
+          "Reliable event delivery connecting business systems and external services.",
+        group: "Platform",
       },
       {
         title: "API documentation",
         description:
-          "Clear, human-readable references, guides, and integration examples designed for fast comprehension.",
-        group: "Build & Test",
-        status: "Planned direction",
+          "Readable reference guides and working examples written for fast comprehension.",
+        group: "Build",
       },
       {
         title: "Testing and debugging tools",
         description:
-          "Request inspection, payload verification, and diagnostics to help developers validate integrations early.",
-        group: "Build & Test",
-        status: "Planned direction",
+          "Request inspection and verification diagnostics to catch integration issues early.",
+        group: "Build",
       },
       {
         title: "Infrastructure, monitoring and analytics",
         description:
-          "Operational visibility, health tracking, and dependable service foundations for production workloads.",
+          "Health tracking, usage telemetry, and dependable hosting for production workloads.",
         group: "Operate",
-        status: "Planned direction",
       },
     ],
   },
@@ -236,70 +204,60 @@ export const DIVISIONS: DivisionInfo[] = [
     name: "BinRo Intelligence",
     shortName: "Intelligence",
     href: "/intelligence",
-    tagline: "Intelligent technology that helps people achieve more.",
-    summary: "AI assistants, agents and intelligent systems.",
+    tagline: "AI products and systems for useful work.",
+    summary: "AI and intelligent technology for useful work.",
     overview:
-      "BinRo Intelligence explores practical AI-powered products, assistants, and automated systems that help individuals and businesses work with greater clarity and capability. We focus on applied intelligence—building upon proven foundation models and services rather than claiming proprietary foundational model research.",
-    statusNote:
-      "The areas outlined below represent BinRo's planned direction for applied intelligence products and systems, and are not yet released as public products.",
-    accentColor: "#4D6F80",
-    accentSurface: "#F2F5F7",
+      "Practical AI-powered products and workflow systems built upon proven models, focused on real utility and clear human oversight.",
+    accentColor: "#426579",
+    accentSurface: "#F3F6F7",
     categories: [
       {
         title: "AI chat assistants",
         description:
-          "Helpful conversational interfaces tailored for clear everyday guidance, customer support, and structured problem solving.",
-        group: "Conversational Systems",
-        status: "Planned direction",
+          "Clear conversational interfaces for everyday guidance, support, and problem solving.",
+        group: "Interfaces",
       },
       {
         title: "Voice AI",
         description:
-          "Natural spoken interfaces that make digital workflows more accessible across languages and contexts.",
-        group: "Conversational Systems",
-        status: "Planned direction",
+          "Natural spoken workflows that make software accessible across languages and contexts.",
+        group: "Interfaces",
       },
       {
         title: "AI calling and conversations",
         description:
-          "Structured voice workflows for routine enquiries, scheduling, and operational coordination.",
-        group: "Conversational Systems",
-        status: "Planned direction",
+          "Structured voice handling for routine enquiries, scheduling, and coordination.",
+        group: "Interfaces",
       },
       {
         title: "AI agents",
         description:
-          "Task-oriented systems designed to carry out multi-step digital workflows under clear human oversight.",
-        group: "Applied Automation",
-        status: "Planned direction",
+          "Task-oriented systems engineered to carry out multi-step workflows with clear human control.",
+        group: "Automation",
       },
       {
         title: "Business automation",
         description:
-          "Intelligent routing, classification, and repetitive task assistance integrated into business software.",
-        group: "Applied Automation",
-        status: "Planned direction",
+          "Intelligent routing, classification, and administrative assistance inside business software.",
+        group: "Automation",
       },
       {
         title: "Document intelligence",
         description:
-          "Structured extraction, summarisation, and organisation for everyday business and personal documents.",
-        group: "Knowledge & Analysis",
-        status: "Planned direction",
+          "Structured extraction, summarisation, and organisation for everyday documents.",
+        group: "Knowledge",
       },
       {
         title: "Knowledge assistants",
         description:
-          "Context-aware assistants that help teams navigate internal documentation, procedures, and operational records.",
-        group: "Knowledge & Analysis",
-        status: "Planned direction",
+          "Context-aware search and synthesis across internal procedures and records.",
+        group: "Knowledge",
       },
       {
         title: "AI analytics and infrastructure",
         description:
-          "Applied intelligence pipelines, evaluation tooling, and orchestration layers connecting existing models to real workflows.",
-        group: "Knowledge & Analysis",
-        status: "Planned direction",
+          "Evaluation tooling and orchestration connecting reliable models to real tasks.",
+        group: "Knowledge",
       },
     ],
   },

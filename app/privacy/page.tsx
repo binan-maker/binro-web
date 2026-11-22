@@ -12,71 +12,74 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <section className="py-16 sm:py-24 bg-white">
+    <section className="bg-white py-14 sm:py-20">
       <Container>
-        <div className="max-w-3xl">
-          <p className="text-sm font-medium text-[#5C7E8F]">
-            Legal documentation · Draft notice
+        <div className="max-w-2xl">
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#5C7E8F]">
+            Legal · Draft
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#20272B] sm:text-4xl text-balance">
             Privacy Information (Draft)
           </h1>
 
-          <div className="mt-6 rounded-xl border border-[#5C7E8F]/45 bg-[#F3F6F7] p-5 text-sm leading-relaxed text-[#20272B]">
-            <p className="font-semibold">
-              Pre-launch draft — Legal review required
-            </p>
-            <p className="mt-1.5 text-[#4A555C]">
-              This document is a working placeholder prepared for website
-              structure and clarity. It has not undergone formal legal review
-              and must be finalised with verified company, hosting, and data
-              handling details before public launch.
+          <div className="mt-6 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/70 p-4 text-sm leading-relaxed text-[#20272B]">
+            <p className="font-medium">
+              Pre-launch draft — formal legal review required prior to launch.
             </p>
           </div>
 
-          <div className="mt-12 space-y-10 border-t border-[#D4DDE2] pt-10 text-sm leading-relaxed text-[#4A555C] sm:text-base">
+          <div className="mt-10 space-y-8 border-t border-[#D4DDE2] pt-8 text-sm leading-relaxed text-[#556168] sm:text-[0.9375rem]">
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
+              <h2 className="text-base font-semibold text-[#20272B]">
                 1. Scope of this public website
               </h2>
-              <p className="mt-3">
-                This website (<span className="font-mono text-sm">binro.in</span>
-                ) serves solely as the public company information website for
-                BinRo. It does not include user registration, login accounts,
-                databases, or payment processing.
+              <p className="mt-2.5">
+                This website (<span className="font-mono text-xs">binro.in</span>
+                ) serves as the public company website for BinRo. It does not
+                include user registration, login accounts, user databases, or
+                payment processing.
               </p>
-              <p className="mt-3 text-sm text-[#426579]">
+              <p className="mt-2.5 text-sm text-[#426579]">
                 TODO: Confirm separate privacy documentation and link references
                 for any future standalone BinRo products prior to launch.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
-                2. Information collection and server logs
+              <h2 className="text-base font-semibold text-[#20272B]">
+                2. Client-side utility processing
               </h2>
-              <p className="mt-3">
-                This website does not intentionally collect personal profile
-                data through forms or account sign-ups. Standard web server or
-                hosting infrastructure may automatically process routine technical
-                request metadata (such as IP address, user-agent, or timestamps)
-                strictly for delivery and security.
+              <p className="mt-2.5">
+                Tools such as BinRo Image Resizer process files directly inside
+                your browser. Selected images are not uploaded to BinRo servers.
               </p>
-              <p className="mt-3 text-sm text-[#426579]">
+            </section>
+
+            <section>
+              <h2 className="text-base font-semibold text-[#20272B]">
+                3. Information collection and server logs
+              </h2>
+              <p className="mt-2.5">
+                This website does not collect personal profile data through
+                forms or sign-ups. Hosting infrastructure may automatically
+                process routine technical request metadata (such as IP address,
+                user-agent, or timestamps) strictly for delivery and security.
+              </p>
+              <p className="mt-2.5 text-sm text-[#426579]">
                 TODO: Verify exact hosting provider, CDN, and log retention
                 policies prior to launch.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
-                3. Cookies and analytics
+              <h2 className="text-base font-semibold text-[#20272B]">
+                4. Cookies and analytics
               </h2>
-              <p className="mt-3">
+              <p className="mt-2.5">
                 No third-party advertising trackers or marketing cookies are
                 configured in this codebase.
               </p>
-              <p className="mt-3 text-sm text-[#426579]">
+              <p className="mt-2.5 text-sm text-[#426579]">
                 TODO: Document whether privacy-preserving analytics or
                 essential cookies are enabled at deployment, and add consent
                 notices if applicable.
@@ -84,21 +87,10 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
-                4. External links and future applications
-              </h2>
-              <p className="mt-3">
-                If pages on this website link to external services or future
-                BinRo applications, use of those services will be governed by
-                the privacy practices specific to them.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
+              <h2 className="text-base font-semibold text-[#20272B]">
                 5. Legal entity and privacy contact
               </h2>
-              <p className="mt-3 text-sm text-[#426579]">
+              <p className="mt-2.5 text-sm text-[#426579]">
                 TODO: Insert registered entity name, jurisdiction (India),
                 effective date, and verified privacy contact channel after legal
                 review.

@@ -19,19 +19,19 @@ export function SectionHeading({
   const alignment = align === "center" ? "text-center mx-auto" : "text-left";
 
   return (
-    <div className={`max-w-2xl ${alignment} ${className}`}>
+    <div className={`max-w-xl ${alignment} ${className}`}>
       {kicker ? (
-        <p className="text-sm font-medium tracking-normal text-[#5C7E8F]">
+        <p className="text-xs font-medium tracking-wide uppercase text-[#5C7E8F]">
           {kicker}
         </p>
       ) : null}
       <HeadingTag
-        className={`${kicker ? "mt-3" : ""} text-2xl font-semibold tracking-tight text-[#20272B] sm:text-3xl lg:text-[2.125rem] lg:leading-[1.2] text-balance`}
+        className={`${kicker ? "mt-2.5" : ""} text-2xl font-semibold tracking-tight text-[#20272B] sm:text-[1.875rem] sm:leading-[1.2] text-balance`}
       >
         {title}
       </HeadingTag>
       {description ? (
-        <p className="mt-4 text-base leading-relaxed text-[#4A555C] sm:text-[1.0625rem]">
+        <p className="mt-3 text-[0.9375rem] leading-relaxed text-[#556168] sm:text-base">
           {description}
         </p>
       ) : null}

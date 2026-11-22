@@ -1,233 +1,41 @@
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { ArrowRightIcon } from "@/components/ui/Icons";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-[#D4DDE2] bg-white py-16 sm:py-24 lg:py-28">
+    <section className="relative overflow-hidden border-b border-[#D4DDE2] bg-white py-20 sm:py-28 lg:py-36">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-full bg-[radial-gradient(circle_at_82%_24%,rgba(212,221,226,0.42),transparent_52%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-full bg-[radial-gradient(65%_55%_at_50%_0%,rgba(243,246,247,0.95)_0%,rgba(255,255,255,0)_100%)]"
       />
+
       <Container className="relative">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="lg:col-span-7">
-            <p className="text-sm font-medium text-[#5C7E8F]">
-              BinRo · Human-centred technology company
-            </p>
-            <h1 className="mt-4 text-[clamp(2.25rem,4.2vw,3.75rem)] font-semibold leading-[1.1] tracking-tight text-[#20272B] text-balance">
-              Technology for everyday life.
-            </h1>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#4A555C] sm:text-lg sm:leading-relaxed">
-              We build useful digital products, business software, developer
-              tools and intelligent systems to make technology more accessible,
-              understandable and useful.
-            </p>
-            <div className="mt-9 flex flex-wrap items-center gap-4">
-              <ButtonLink href="#divisions" variant="primary" size="lg">
-                <span>Explore our divisions</span>
-                <ArrowRightIcon className="h-4 w-4" />
-              </ButtonLink>
-              <ButtonLink href="/about" variant="secondary" size="lg">
-                Discover BinRo
-              </ButtonLink>
-            </div>
-          </div>
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5C7E8F]">
+            BINRO
+          </p>
 
-          <div className="lg:col-span-5">
-            <div
-              aria-hidden="true"
-              className="relative mx-auto aspect-[4/3] w-full max-w-[460px] rounded-2xl border border-[#D4DDE2] bg-[#F3F6F7] p-6 sm:p-8"
+          <h1 className="mt-5 text-[clamp(2.25rem,5.2vw,4rem)] font-semibold leading-[1.08] tracking-[-0.025em] text-[#20272B] text-balance">
+            Technology for everyday life.
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-[#556168] sm:text-lg">
+            Useful technology for people, professionals and businesses.
+          </p>
+
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-3.5">
+            <ButtonLink href="#divisions" variant="primary" size="lg">
+              <span>Explore BinRo</span>
+              <ArrowRightIcon className="h-4 w-4" />
+            </ButtonLink>
+            <Link
+              href="/utilities/image-resizer"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-[#D4DDE2] bg-white px-5 py-2.5 text-sm font-medium text-[#20272B] transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 sm:text-[0.9375rem]"
             >
-              {/* Subtle architectural grid lines */}
-              <svg
-                viewBox="0 0 400 300"
-                className="h-full w-full"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <defs>
-                  <pattern
-                    id="frost-grid"
-                    width="32"
-                    height="32"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path
-                      d="M 32 0 L 0 0 0 32"
-                      fill="none"
-                      stroke="#D4DDE2"
-                      strokeWidth="0.75"
-                    />
-                  </pattern>
-                </defs>
-                <rect width="400" height="300" rx="12" fill="url(#frost-grid)" />
-
-                {/* Four unified architectural planes representing the four divisions */}
-                <rect
-                  x="28"
-                  y="32"
-                  width="156"
-                  height="104"
-                  rx="10"
-                  fill="#FFFFFF"
-                  stroke="#D4DDE2"
-                  strokeWidth="1.25"
-                />
-                <rect
-                  x="44"
-                  y="50"
-                  width="48"
-                  height="6"
-                  rx="3"
-                  fill="#5C7E8F"
-                />
-                <rect
-                  x="44"
-                  y="66"
-                  width="110"
-                  height="4"
-                  rx="2"
-                  fill="#D4DDE2"
-                />
-                <rect
-                  x="44"
-                  y="78"
-                  width="84"
-                  height="4"
-                  rx="2"
-                  fill="#E4EBEF"
-                />
-
-                <rect
-                  x="216"
-                  y="32"
-                  width="156"
-                  height="104"
-                  rx="10"
-                  fill="#5C7E8F"
-                />
-                <rect
-                  x="232"
-                  y="50"
-                  width="54"
-                  height="6"
-                  rx="3"
-                  fill="#FFFFFF"
-                />
-                <rect
-                  x="232"
-                  y="66"
-                  width="112"
-                  height="4"
-                  rx="2"
-                  fill="#D4DDE2"
-                  fillOpacity="0.7"
-                />
-                <rect
-                  x="232"
-                  y="78"
-                  width="88"
-                  height="4"
-                  rx="2"
-                  fill="#D4DDE2"
-                  fillOpacity="0.45"
-                />
-
-                <rect
-                  x="28"
-                  y="164"
-                  width="156"
-                  height="104"
-                  rx="10"
-                  fill="#D4DDE2"
-                  fillOpacity="0.55"
-                  stroke="#C4D0D7"
-                  strokeWidth="1.25"
-                />
-                <rect
-                  x="44"
-                  y="182"
-                  width="52"
-                  height="6"
-                  rx="3"
-                  fill="#426579"
-                />
-                <rect
-                  x="44"
-                  y="198"
-                  width="104"
-                  height="4"
-                  rx="2"
-                  fill="#A2A2A2"
-                  fillOpacity="0.55"
-                />
-                <rect
-                  x="44"
-                  y="210"
-                  width="76"
-                  height="4"
-                  rx="2"
-                  fill="#A2A2A2"
-                  fillOpacity="0.4"
-                />
-
-                <rect
-                  x="216"
-                  y="164"
-                  width="156"
-                  height="104"
-                  rx="10"
-                  fill="#FFFFFF"
-                  stroke="#5C7E8F"
-                  strokeOpacity="0.45"
-                  strokeWidth="1.25"
-                />
-                <rect
-                  x="232"
-                  y="182"
-                  width="58"
-                  height="6"
-                  rx="3"
-                  fill="#20272B"
-                  fillOpacity="0.8"
-                />
-                <rect
-                  x="232"
-                  y="198"
-                  width="108"
-                  height="4"
-                  rx="2"
-                  fill="#D4DDE2"
-                />
-                <rect
-                  x="232"
-                  y="210"
-                  width="82"
-                  height="4"
-                  rx="2"
-                  fill="#E4EBEF"
-                />
-
-                {/* Subtle central connective lines uniting the four divisions */}
-                <path
-                  d="M184 84H216M184 216H216M106 136V164M294 136V164"
-                  stroke="#5C7E8F"
-                  strokeOpacity="0.5"
-                  strokeWidth="1.25"
-                />
-                <circle cx="200" cy="150" r="18" fill="#FFFFFF" fillOpacity="0.82" stroke="#5C7E8F" strokeWidth="1.25" />
-                <circle cx="200" cy="150" r="5" fill="#426579" />
-              </svg>
-
-              {/* Restrained frosted glass layer */}
-              <div className="pointer-events-none absolute inset-x-8 bottom-4 rounded-xl border border-white/80 bg-white/75 px-4 py-2.5 backdrop-blur-md">
-                <div className="flex items-center justify-between text-xs font-medium text-[#20272B]">
-                  <span>One company</span>
-                  <span className="text-[#5C7E8F]">Four divisions</span>
-                </div>
-              </div>
-            </div>
+              <span>Image Resizer</span>
+            </Link>
           </div>
         </div>
       </Container>

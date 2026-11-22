@@ -23,8 +23,8 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  md: "px-5 py-2.5 text-sm",
-  lg: "px-6 py-3 text-sm sm:text-base",
+  md: "min-h-[40px] px-4 py-2 text-sm",
+  lg: "min-h-[44px] px-5 py-2.5 text-sm sm:text-[0.9375rem]",
 };
 
 export function ButtonLink({

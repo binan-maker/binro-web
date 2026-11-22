@@ -12,86 +12,78 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <section className="py-16 sm:py-24 bg-white">
+    <section className="bg-white py-14 sm:py-20">
       <Container>
-        <div className="max-w-3xl">
-          <p className="text-sm font-medium text-[#5C7E8F]">
-            Legal documentation · Draft notice
+        <div className="max-w-2xl">
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#5C7E8F]">
+            Legal · Draft
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#20272B] sm:text-4xl text-balance">
             Terms Information (Draft)
           </h1>
 
-          <div className="mt-6 rounded-xl border border-[#5C7E8F]/45 bg-[#F3F6F7] p-5 text-sm leading-relaxed text-[#20272B]">
-            <p className="font-semibold">
-              Pre-launch draft — Legal review required
-            </p>
-            <p className="mt-1.5 text-[#4A555C]">
-              This document is a draft placeholder outlining basic terms for the
-              public BinRo informational website. It requires formal legal
-              review and confirmation of company details before public launch.
+          <div className="mt-6 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/70 p-4 text-sm leading-relaxed text-[#20272B]">
+            <p className="font-medium">
+              Pre-launch draft — formal legal review required prior to launch.
             </p>
           </div>
 
-          <div className="mt-12 space-y-10 border-t border-[#D4DDE2] pt-10 text-sm leading-relaxed text-[#4A555C] sm:text-base">
+          <div className="mt-10 space-y-8 border-t border-[#D4DDE2] pt-8 text-sm leading-relaxed text-[#556168] sm:text-[0.9375rem]">
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
+              <h2 className="text-base font-semibold text-[#20272B]">
                 1. Informational purpose
               </h2>
-              <p className="mt-3">
-                The content published on{" "}
-                <span className="font-mono text-sm">binro.in</span> provides
+              <p className="mt-2.5">
+                Content published on{" "}
+                <span className="font-mono text-xs">binro.in</span> provides
                 general corporate information about BinRo and its four
-                technology divisions: BinRo Utilities, BinRo Business, BinRo
-                Developer, and BinRo Intelligence.
+                divisions: Utilities, Business, Developer, and Intelligence.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
+              <h2 className="text-base font-semibold text-[#20272B]">
                 2. Planned products and forward-looking descriptions
               </h2>
-              <p className="mt-3">
-                Descriptions of future categories across BinRo Utilities, BinRo
-                Business, BinRo Developer, and BinRo Intelligence represent
-                planned areas of exploration and development. Nothing on this
-                website constitutes a binding commitment to release specific
-                features, timelines, or pricing.
+              <p className="mt-2.5">
+                Descriptions of future areas across BinRo Utilities, BinRo
+                Business, BinRo Developer, and BinRo Intelligence outline
+                planned directions. Nothing on this website constitutes a
+                binding commitment to release specific features, timelines, or
+                pricing.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
+              <h2 className="text-base font-semibold text-[#20272B]">
                 3. Separate application terms
               </h2>
-              <p className="mt-3">
-                Access to and use of any future standalone BinRo software
-                applications or services will be governed by separate
-                application-specific terms and policies published alongside
-                those products.
+              <p className="mt-2.5">
+                Use of standalone BinRo software applications or services may be
+                governed by separate terms published alongside those products.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
+              <h2 className="text-base font-semibold text-[#20272B]">
                 4. Intellectual property
               </h2>
-              <p className="mt-3">
-                The BinRo name, website copy, visual design, and architecture
+              <p className="mt-2.5">
+                The BinRo name, website copy, visual design, and software
                 presented on this site remain the property of BinRo unless
                 otherwise noted.
               </p>
-              <p className="mt-3 text-sm text-[#426579]">
+              <p className="mt-2.5 text-sm text-[#426579]">
                 TODO: Confirm trademark status, permitted attribution, and
                 copyright notice details prior to launch.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[#20272B]">
+              <h2 className="text-base font-semibold text-[#20272B]">
                 5. Governing law and contact
               </h2>
-              <p className="mt-3 text-sm text-[#426579]">
+              <p className="mt-2.5 text-sm text-[#426579]">
                 TODO: Specify registered legal entity, governing law and
                 jurisdiction in India, effective date, and official legal
                 contact address after formal legal review.

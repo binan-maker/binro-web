@@ -13,13 +13,12 @@ export const SITE_CONFIG = {
   legalName: "BinRo",
   tagline: "Technology for everyday life.",
   description:
-    "BinRo builds useful digital products, business software, developer tools and intelligent systems to make technology more accessible, understandable and useful.",
+    "Useful technology for people, professionals and businesses across everyday utilities, business software, developer tools and applied intelligence.",
   url: "https://binro.in",
   originRegion: "India",
 } as const;
 
 export const PRIMARY_NAV: NavItem[] = [
-  { label: "Home", href: "/" },
   { label: "Utilities", href: "/utilities" },
   { label: "Business", href: "/business" },
   { label: "Developer", href: "/developer" },
@@ -60,40 +59,17 @@ export const FOOTER_GROUPS: FooterLinkGroup[] = [
 
 export const COMPANY_PURPOSE = {
   purpose:
-    "To make technology accessible, understandable and useful to everyone, while developing new technologies that expand what people and businesses can achieve.",
+    "Make technology accessible, understandable and useful to everyone, while developing new technology that expands what people and businesses can achieve.",
   vision:
-    "To help create a more technologically capable society. A society where people can access useful technology, understand how it works, use it responsibly, solve meaningful problems and create technology themselves.",
+    "Help build a more technologically capable society where useful tools are easy to reach and understand.",
   philosophy:
     "Technology should make people more capable, not more dependent on BinRo.",
   mission: [
     "Make existing technology easier to access and use.",
-    "Build useful software for individuals and businesses.",
-    "Give developers better tools and infrastructure.",
-    "Develop intelligent AI-powered products and systems.",
-    "Make useful technology accessible in India and eventually worldwide.",
-    "Build reliable products that create measurable value.",
+    "Build practical software for individuals and businesses.",
+    "Equip developers with dependable tools and infrastructure.",
+    "Develop applied AI products that assist with real work.",
+    "Start in India and expand globally over time.",
   ],
-  ambition:
-    "Build a globally significant technology company that contributes to technological advancement and helps individuals, businesses and society benefit from technology. India first. Global expansion over time.",
+  ambition: "India first. Global over time.",
 } as const;
-
-export const APPROACH_PRINCIPLES = [
-  {
-    index: "01",
-    title: "Accessibility",
-    description:
-      "Make useful technology easier for more people to access and use.",
-  },
-  {
-    index: "02",
-    title: "Simplicity",
-    description:
-      "Make complex technology easier to understand and work with.",
-  },
-  {
-    index: "03",
-    title: "Advancement",
-    description:
-      "Continuously develop better products and new technological capabilities.",
-  },
-] as const;

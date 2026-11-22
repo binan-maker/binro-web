@@ -52,137 +52,104 @@ export function UtilitiesDirectory() {
       : getUtilityCategoryById(selectedCategory);
 
   return (
-    <div className="space-y-12">
-      {/* Search and category filter controls */}
-      <div className="rounded-2xl border border-[#D4DDE2] bg-[#F3F6F7] p-5 sm:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative w-full lg:max-w-sm">
-            <label htmlFor="utilities-search" className="sr-only">
-              Search BinRo Utilities tools
-            </label>
-            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5C7E8F]" />
-            <input
-              id="utilities-search"
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search tools (e.g. image resizer, photo)"
-              className="w-full rounded-lg border border-[#D4DDE2] bg-white py-2.5 pl-10 pr-4 text-sm text-[#20272B] placeholder:text-[#78858D] focus:border-[#5C7E8F] focus:outline-none focus:ring-2 focus:ring-[#5C7E8F]/30"
-            />
-          </div>
+    <div className="space-y-14">
+      {/* Search and category filter bar */}
+      <div className="flex flex-col gap-4 border-b border-[#D4DDE2] pb-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:max-w-xs">
+          <label htmlFor="utilities-search" className="sr-only">
+            Search BinRo Utilities tools
+          </label>
+          <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5C7E8F]" />
+          <input
+            id="utilities-search"
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search utilities"
+            className="min-h-[40px] w-full rounded-lg border border-[#D4DDE2] bg-white py-2 pl-10 pr-3.5 text-sm text-[#20272B] placeholder:text-[#78858D] focus:border-[#5C7E8F] focus:outline-none focus:ring-2 focus:ring-[#5C7E8F]/25"
+          />
+        </div>
 
-          <div
-            role="group"
-            aria-label="Filter tools by category"
-            className="flex flex-wrap items-center gap-2"
+        <div
+          role="group"
+          aria-label="Filter tools by category"
+          className="flex flex-wrap items-center gap-1.5"
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedCategory("all")}
+            aria-pressed={selectedCategory === "all"}
+            className={`min-h-[34px] rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+              selectedCategory === "all"
+                ? "bg-[#426579] text-white"
+                : "bg-[#F3F6F7] text-[#556168] hover:text-[#20272B]"
+            }`}
           >
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("all")}
-              aria-pressed={selectedCategory === "all"}
-              className={`rounded-lg px-3.5 py-2 text-xs font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
-                selectedCategory === "all"
-                  ? "bg-[#426579] text-white"
-                  : "border border-[#D4DDE2] bg-white text-[#4A555C] hover:border-[#5C7E8F] hover:text-[#20272B]"
-              }`}
-            >
-              All ({UTILITY_TOOLS.length})
-            </button>
+            All
+          </button>
 
-            {UTILITY_CATEGORIES.map((category) => {
-              const count = UTILITY_TOOLS.filter(
-                (t) => t.categoryId === category.id
-              ).length;
-              const isSelected = selectedCategory === category.id;
+          {UTILITY_CATEGORIES.map((category) => {
+            const isSelected = selectedCategory === category.id;
 
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(category.id)}
-                  aria-pressed={isSelected}
-                  className={`rounded-lg px-3.5 py-2 text-xs font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
-                    isSelected
-                      ? "bg-[#426579] text-white"
-                      : "border border-[#D4DDE2] bg-white text-[#4A555C] hover:border-[#5C7E8F] hover:text-[#20272B]"
-                  }`}
-                >
-                  {category.name} ({count})
-                </button>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => setSelectedCategory(category.id)}
+                aria-pressed={isSelected}
+                className={`min-h-[34px] rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                  isSelected
+                    ? "bg-[#426579] text-white"
+                    : "bg-[#F3F6F7] text-[#556168] hover:text-[#20272B]"
+                }`}
+              >
+                {category.name}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Directory results or helpful empty state */}
+      {/* Live Tools */}
       {filteredTools.length > 0 ? (
-        <div>
-          <div className="flex items-baseline justify-between gap-4 border-b border-[#D4DDE2] pb-4">
-            <h2 className="text-lg font-semibold text-[#20272B]">
+        <div className="space-y-4">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="text-sm font-medium uppercase tracking-[0.06em] text-[#5C7E8F]">
               {activeCategoryObj ? activeCategoryObj.name : "Available tools"}
             </h2>
-            <p className="text-xs text-[#5C7E8F] tabular-nums">
-              Showing {filteredTools.length}{" "}
+            <p className="font-mono text-xs text-[#A2A2A2] tabular-nums">
+              {filteredTools.length}{" "}
               {filteredTools.length === 1 ? "tool" : "tools"}
             </p>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {filteredTools.map((tool) => {
               const category = getUtilityCategoryById(tool.categoryId);
-              const isAvailable = tool.status === "available";
-
-              if (isAvailable) {
-                return (
-                  <Link
-                    key={tool.id}
-                    href={tool.href}
-                    className="group flex flex-col justify-between rounded-2xl border border-[#D4DDE2] bg-white p-6 transition-all duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-3 text-xs">
-                        <span className="font-medium text-[#5C7E8F]">
-                          {category?.name ?? "Utility"} · Available
-                        </span>
-                      </div>
-                      <h3 className="mt-3 text-xl font-semibold tracking-tight text-[#20272B] group-hover:text-[#426579]">
-                        {tool.name}
-                      </h3>
-                      <p className="mt-2.5 text-sm leading-relaxed text-[#4A555C]">
-                        {tool.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-6 flex items-center justify-between border-t border-[#D4DDE2]/80 pt-4 text-sm font-medium text-[#426579] group-hover:text-[#20272B]">
-                      <span>Open tool</span>
-                      <ArrowRightIcon className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1" />
-                    </div>
-                  </Link>
-                );
-              }
 
               return (
-                <article
+                <Link
                   key={tool.id}
-                  className="flex flex-col justify-between rounded-2xl border border-[#D4DDE2] bg-white p-6"
+                  href={tool.href}
+                  className="group flex flex-col justify-between rounded-2xl border border-[#D4DDE2] bg-[#F3F6F7]/65 p-6 transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 sm:p-7"
                 >
                   <div>
                     <p className="text-xs font-medium text-[#5C7E8F]">
-                      {category?.name ?? "Utility"} · Coming soon
+                      {category?.name ?? "Utility"} · Available
                     </p>
-                    <h3 className="mt-3 text-xl font-semibold tracking-tight text-[#20272B]">
+                    <h3 className="mt-2.5 text-xl font-semibold tracking-tight text-[#20272B]">
                       {tool.name}
                     </h3>
-                    <p className="mt-2.5 text-sm leading-relaxed text-[#4A555C]">
+                    <p className="mt-2 text-sm leading-relaxed text-[#556168]">
                       {tool.description}
                     </p>
                   </div>
 
-                  <p className="mt-6 border-t border-[#D4DDE2]/80 pt-4 text-xs font-medium text-[#5C7E8F]">
-                    Coming soon
-                  </p>
-                </article>
+                  <div className="mt-6 flex items-center gap-1.5 text-sm font-medium text-[#426579] group-hover:text-[#20272B]">
+                    <span>Open tool</span>
+                    <ArrowRightIcon className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+                  </div>
+                </Link>
               );
             })}
           </div>
@@ -190,29 +157,24 @@ export function UtilitiesDirectory() {
       ) : (
         <div
           role="status"
-          className="rounded-2xl border border-[#D4DDE2] bg-[#F3F6F7]/70 p-8 sm:p-10 text-center"
+          className="rounded-2xl border border-[#D4DDE2] bg-[#F3F6F7]/50 px-6 py-10 text-center"
         >
-          <p className="text-sm font-medium text-[#5C7E8F]">
-            {normalizedQuery
-              ? "No matching tools"
-              : "Category in planning"}
-          </p>
-          <h2 className="mt-2 text-xl font-semibold text-[#20272B]">
+          <p className="text-base font-medium text-[#20272B]">
             {normalizedQuery
               ? `No tools matched "${searchQuery.trim()}".`
-              : `No tools have been released in ${activeCategoryObj?.name ?? "this category"} yet.`}
-          </h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-[#4A555C]">
-            {activeCategoryObj && !normalizedQuery
-              ? `${activeCategoryObj.description} BinRo adds tools here progressively once each working utility is built and verified.`
-              : "Try another search term or view all available tools in the BinRo Utilities directory."}
+              : `No tools released in ${activeCategoryObj?.name ?? "this category"} yet.`}
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#556168]">
+            {activeCategoryObj && !normalizedQuery
+              ? activeCategoryObj.description
+              : "Try another search term or view all tools."}
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
             {normalizedQuery ? (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="rounded-lg bg-[#426579] px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#355364] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                className="min-h-[38px] rounded-lg bg-[#426579] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#355364] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
               >
                 Clear search
               </button>
@@ -221,31 +183,27 @@ export function UtilitiesDirectory() {
               <button
                 type="button"
                 onClick={() => setSelectedCategory("all")}
-                className="rounded-lg border border-[#D4DDE2] bg-white px-4 py-2 text-sm font-medium text-[#20272B] transition-colors duration-150 hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                className="min-h-[38px] rounded-lg border border-[#D4DDE2] bg-white px-4 py-1.5 text-sm font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
               >
-                Show all categories
+                Show all
               </button>
             ) : null}
           </div>
         </div>
       )}
 
-      {/* Overview of the six directory categories */}
+      {/* Clean hairline directory of planned utility categories */}
       <div className="border-t border-[#D4DDE2] pt-12">
-        <div className="max-w-2xl">
-          <p className="text-sm font-medium text-[#5C7E8F]">
-            Directory structure
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#20272B] text-balance">
-            Six utility categories under BinRo Utilities.
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+          <h2 className="text-lg font-semibold tracking-tight text-[#20272B]">
+            Utility categories
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-[#4A555C] sm:text-base">
-            The directory is organised across six everyday task areas and grows
-            naturally as each real tool is completed.
+          <p className="text-xs text-[#556168]">
+            New tools are added here as each utility is completed.
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {UTILITY_CATEGORIES.map((category) => {
             const toolsInCat = UTILITY_TOOLS.filter(
               (t) => t.categoryId === category.id && t.status === "available"
@@ -254,34 +212,31 @@ export function UtilitiesDirectory() {
             return (
               <div
                 key={category.id}
-                className="flex flex-col justify-between rounded-xl border border-[#D4DDE2] bg-white p-5"
+                className="border-t border-[#D4DDE2] pt-4"
               >
-                <div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono font-medium text-[#5C7E8F]">
-                      Category {category.code}
-                    </span>
-                    <span className="text-[#4A555C] tabular-nums">
-                      {toolsInCat.length > 0
-                        ? `${toolsInCat.length} available`
-                        : "No tools released yet"}
-                    </span>
-                  </div>
-                  <h3 className="mt-2.5 text-base font-semibold text-[#20272B]">
-                    {category.name}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#4A555C]">
-                    {category.description}
-                  </p>
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="font-mono text-[#A2A2A2] tabular-nums">
+                    {category.code}
+                  </span>
+                  <span className="text-[#5C7E8F]">
+                    {toolsInCat.length > 0
+                      ? `${toolsInCat.length} available`
+                      : "Planned"}
+                  </span>
                 </div>
-
+                <h3 className="mt-2 text-base font-semibold text-[#20272B]">
+                  {category.name}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[#556168]">
+                  {category.description}
+                </p>
                 {toolsInCat.length > 0 ? (
-                  <div className="mt-4 border-t border-[#D4DDE2]/80 pt-3">
+                  <div className="mt-3">
                     {toolsInCat.map((tool) => (
                       <Link
                         key={tool.id}
                         href={tool.href}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#426579] hover:text-[#20272B] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] rounded-sm"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#426579] transition-colors hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] rounded-sm"
                       >
                         <span>{tool.name}</span>
                         <ArrowRightIcon className="h-3.5 w-3.5" />

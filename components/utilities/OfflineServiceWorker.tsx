@@ -204,44 +204,31 @@ export function OfflineServiceWorker() {
     }
   };
 
-  let statusText = "Preparing offline support...";
+  let statusLabel = "Caching for offline use...";
   if (cacheState === "ready") {
-    statusText = isOnline
-      ? "Offline ready — cached for reopening without internet"
-      : "Working offline — using cached local application";
+    statusLabel = isOnline
+      ? "Offline ready"
+      : "Offline mode · Using cached app";
   } else if (cacheState === "unsupported") {
-    statusText = isOnline
-      ? "Local browser processing active (offline reopening not supported in this browser)"
-      : "Browser is offline";
+    statusLabel = isOnline ? "Browser-local" : "Offline";
   } else if (cacheState === "error") {
-    statusText = isOnline
-      ? "Online — browser-local processing active (offline cache pending reload)"
-      : "Offline mode — local processing remains available while page is open";
+    statusLabel = isOnline ? "Local processing" : "Offline mode";
   }
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col gap-3 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7] px-4 py-3 text-xs text-[#20272B] sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[#4A555C]"
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="font-medium text-[#426579]">
-          {isOnline ? "Connection: Online" : "Connection: Offline"}
-        </span>
-        <span aria-hidden="true" className="text-[#A2A2A2]">
-          ·
-        </span>
-        <span className="text-[#4A555C]">{statusText}</span>
-      </div>
-
+      <span className="font-medium text-[#5C7E8F]">{statusLabel}</span>
       {!isInstalled && deferredPrompt ? (
         <button
           type="button"
           onClick={handleInstall}
-          className="inline-flex items-center justify-center rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] whitespace-nowrap shrink-0 transition-colors duration-150 hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+          className="inline-flex items-center rounded-md border border-[#D4DDE2] bg-white px-2.5 py-1 text-xs font-medium text-[#20272B] whitespace-nowrap shrink-0 transition-colors duration-150 hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
         >
-          Install for offline use
+          Install app
         </button>
       ) : null}
     </div>
