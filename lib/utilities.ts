@@ -18,6 +18,8 @@ export type UtilityToolStatus = "available" | "coming-soon";
 export interface UtilityTool {
   id: string;
   name: string;
+  shortTitle: string;
+  shortDescription: string;
   description: string;
   categoryId: UtilityCategoryId;
   href: string;
@@ -74,6 +76,8 @@ export const UTILITY_TOOLS: UtilityTool[] = [
   {
     id: "image-resizer",
     name: "BinRo Image Resizer",
+    shortTitle: "Image Resizer",
+    shortDescription: "Resize and compress images.",
     description:
       "Resize and compress photographs and signatures for online applications. Set custom dimensions and reduce image file size directly in your browser.",
     categoryId: "image-tools",
@@ -95,6 +99,8 @@ export const UTILITY_TOOLS: UtilityTool[] = [
   {
     id: "pdf-compressor",
     name: "BinRo PDF Compressor",
+    shortTitle: "PDF Compressor",
+    shortDescription: "Reduce PDF file size.",
     description:
       "Make your PDF smaller. Keep it readable. Reduce PDF file size for online applications and uploads directly in your browser.",
     categoryId: "pdf-document-tools",

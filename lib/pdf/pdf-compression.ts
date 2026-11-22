@@ -31,14 +31,21 @@ export interface CompressPdfOptions {
   preserveImageResolution: boolean;
 }
 
+export type CompressionStage =
+  | "reading"
+  | "analyzing"
+  | "compressing-images"
+  | "optimizing-structure"
+  | "generating"
+  | "verifying";
+
 export interface CompressionProgress {
-  stage:
-    | "reading"
-    | "analyzing"
-    | "compressing-images"
-    | "optimizing-structure"
-    | "verifying";
-  percent: number;
+  stage: CompressionStage;
+  /**
+   * Percentage (0-100) only when measurable unit completion exists.
+   * `null` indicates an opaque library step where indeterminate feedback is honest.
+   */
+  percent: number | null;
   detail: string;
 }
 
@@ -163,50 +170,51 @@ export function translatePdfError(error: unknown): string {
       msg.includes("invalid pdf") ||
       msg.includes("expected") ||
       msg.includes("unable to parse") ||
-      msg.includes("unexpected eof")
+      msg.includes("unexpected eof") ||
+      msg.includes("cannot read propert") ||
+      msg.includes("xref") ||
+      msg.includes("trailer") ||
+      msg.includes("catalog")
     ) {
       return "Could not read this file. It may be corrupted or not a valid PDF.";
     }
     if (msg.includes("memory") || msg.includes("allocation")) {
       return "This document requires more memory than the browser can allocate.";
     }
-    if (error.message.trim().length > 0 && error.message.length < 180) {
+    if (
+      error.name !== "TypeError" &&
+      error.name !== "RangeError" &&
+      error.message.trim().length > 0 &&
+      error.message.length < 180
+    ) {
       return error.message;
     }
   }
   return "Unable to process this PDF. Please check that the file is a valid, unencrypted PDF.";
 }
 
-async function deflateZlib(data: Uint8Array): Promise<Uint8Array | null> {
-  if (typeof CompressionStream === "undefined") {
-    return null;
-  }
-  try {
-    const cs = new CompressionStream("deflate");
-    const writer = cs.writable.getWriter();
-    const copy = new Uint8Array(data.byteLength);
-    copy.set(data);
-    await writer.write(copy);
-    await writer.close();
+function yieldToEventLoop(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
-    const reader = cs.readable.getReader();
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) {
-        chunks.push(value);
-        total += value.byteLength;
-      }
-    }
-    const out = new Uint8Array(total);
-    let offset = 0;
-    for (const chunk of chunks) {
-      out.set(chunk, offset);
-      offset += chunk.byteLength;
-    }
-    return out;
+function checkAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new Error("Compression cancelled.");
+  }
+}
+
+/**
+ * Losslessly deflate an uncompressed stream via pdf-lib's synchronous pako
+ * encoder. Avoids Web Streams CompressionStream backpressure deadlocks on
+ * streams exceeding internal transform buffer thresholds (~16-64 KB).
+ */
+function deflateStreamSync(
+  pdfDoc: PDFDocument,
+  contents: Uint8Array
+): Uint8Array | null {
+  try {
+    const flated = pdfDoc.context.flateStream(contents);
+    return flated.contents;
   } catch {
     return null;
   }
@@ -341,7 +349,10 @@ function resolveColorSpaceComponents(
           } catch {
             palette = null;
           }
-        } else if ("asBytes" in lookupObj && typeof lookupObj.asBytes === "function") {
+        } else if (
+          "asBytes" in lookupObj &&
+          typeof lookupObj.asBytes === "function"
+        ) {
           palette = (lookupObj as { asBytes: () => Uint8Array }).asBytes();
         }
         if (palette) {
@@ -398,6 +409,7 @@ function isImageEligible(
   const width = widthObj.asNumber();
   const height = heightObj.asNumber();
   if (width < 48 && height < 48) return null;
+  if (width <= 0 || height <= 0) return null;
   if (width * height > 25_000_000) return null; // Protect browser canvas memory
 
   const bpcObj = dict.lookup(PDFName.of("BitsPerComponent"));
@@ -504,6 +516,7 @@ function buildRgbaPixels(
       colorInfo.hival ?? 255,
       Math.floor(palette.length / 3) - 1
     );
+    if (maxIndex < 0) return null;
     const rgba = new Uint8Array(pixelCount * 4);
     for (let i = 0; i < pixelCount; i += 1) {
       const idx = Math.min(rawPixels[i], maxIndex) * 3;
@@ -609,7 +622,10 @@ async function runSingleCompressionPass(
   pass: CompressionPass,
   options: CompressPdfOptions,
   reencodeImage: ImageReencoder,
-  onProgress?: (progress: CompressionProgress) => void
+  deflatedStreamCache: Map<string, Uint8Array | null>,
+  passLabel: string | null,
+  onProgress?: (progress: CompressionProgress) => void,
+  signal?: AbortSignal
 ): Promise<{
   bytes: Uint8Array;
   pageCount: number;
@@ -617,9 +633,13 @@ async function runSingleCompressionPass(
   imagesOptimized: number;
   hasDigitalSignature: boolean;
 }> {
+  checkAborted(signal);
+
   const pdfDoc = await PDFDocument.load(sourceBytes, {
     updateMetadata: false,
   });
+
+  checkAborted(signal);
 
   const pageCount = pdfDoc.getPageCount();
   const { hasDigitalSignature } = detectDocumentSignaturesAndLinks(pdfDoc);
@@ -655,26 +675,25 @@ async function runSingleCompressionPass(
       }
     } else if (
       !obj.dict.lookup(PDFName.of("Filter")) &&
+      obj.dict.lookup(PDFName.of("Type")) !== PDFName.of("Metadata") &&
       obj.contents.length > 160
     ) {
       nonImageRawStreams.push({ ref, stream: obj });
     }
   }
 
+  const prefix = passLabel ? `${passLabel} — ` : "";
+
   let imagesOptimized = 0;
   for (let i = 0; i < imageEntries.length; i += 1) {
+    checkAborted(signal);
     const entry = imageEntries[i];
-    if (onProgress) {
-      const pct = Math.min(
-        82,
-        20 + Math.round(((i + 1) / Math.max(1, imageEntries.length)) * 60)
-      );
-      onProgress({
-        stage: "compressing-images",
-        percent: pct,
-        detail: `Optimising embedded image ${i + 1} of ${imageEntries.length}`,
-      });
-    }
+
+    onProgress?.({
+      stage: "compressing-images",
+      percent: Math.round((i / imageEntries.length) * 100),
+      detail: `${prefix}Optimising image ${i + 1} of ${imageEntries.length}`,
+    });
 
     const { ref, stream, meta } = entry;
     const origLen = stream.contents.length;
@@ -686,54 +705,60 @@ async function runSingleCompressionPass(
     let reencoded: { jpegBytes: Uint8Array; width: number; height: number } | null =
       null;
 
-    if (meta.filter === "dct") {
-      reencoded = await reencodeImage({
-        kind: "jpeg",
-        bytes: stream.contents,
-        width: meta.width,
-        height: meta.height,
-        maxEdge,
-        quality: pass.jpegQuality,
-      });
-    } else {
-      let decodedPixels: Uint8Array | null = null;
-      try {
-        decodedPixels =
-          meta.filter === "flate"
-            ? decodePDFRawStream(stream).decode()
-            : stream.contents;
-      } catch {
-        decodedPixels = null;
-      }
+    try {
+      if (meta.filter === "dct") {
+        reencoded = await reencodeImage({
+          kind: "jpeg",
+          bytes: stream.contents,
+          width: meta.width,
+          height: meta.height,
+          maxEdge,
+          quality: pass.jpegQuality,
+        });
+      } else {
+        let decodedPixels: Uint8Array | null = null;
+        try {
+          decodedPixels =
+            meta.filter === "flate"
+              ? decodePDFRawStream(stream).decode()
+              : stream.contents;
+        } catch {
+          decodedPixels = null;
+        }
 
-      if (decodedPixels && meta.predictor >= 10) {
-        decodedPixels = unfilterPngPredictor(
-          decodedPixels,
-          meta.width,
-          meta.height,
-          meta.colorInfo.components
-        );
-      }
+        if (decodedPixels && meta.predictor >= 10) {
+          decodedPixels = unfilterPngPredictor(
+            decodedPixels,
+            meta.width,
+            meta.height,
+            meta.colorInfo.components
+          );
+        }
 
-      if (decodedPixels) {
-        const rgba = buildRgbaPixels(
-          decodedPixels,
-          meta.width,
-          meta.height,
-          meta.colorInfo
-        );
-        if (rgba) {
-          reencoded = await reencodeImage({
-            kind: "rgba",
-            bytes: rgba,
-            width: meta.width,
-            height: meta.height,
-            maxEdge,
-            quality: pass.jpegQuality,
-          });
+        if (decodedPixels) {
+          const rgba = buildRgbaPixels(
+            decodedPixels,
+            meta.width,
+            meta.height,
+            meta.colorInfo
+          );
+          if (rgba) {
+            reencoded = await reencodeImage({
+              kind: "rgba",
+              bytes: rgba,
+              width: meta.width,
+              height: meta.height,
+              maxEdge,
+              quality: pass.jpegQuality,
+            });
+          }
         }
       }
+    } catch {
+      reencoded = null;
     }
+
+    checkAborted(signal);
 
     // Replace only when genuinely smaller (at least 4% saved) so already-tight JPEGs stay crisp
     if (reencoded && reencoded.jpegBytes.length < origLen * 0.96) {
@@ -754,24 +779,67 @@ async function runSingleCompressionPass(
       pdfDoc.context.assign(ref, newStream);
       imagesOptimized += 1;
     }
+
+    onProgress?.({
+      stage: "compressing-images",
+      percent: Math.round(((i + 1) / imageEntries.length) * 100),
+      detail: `${prefix}Optimising image ${i + 1} of ${imageEntries.length}`,
+    });
+
+    await yieldToEventLoop();
   }
 
-  onProgress?.({
-    stage: "optimizing-structure",
-    percent: 88,
-    detail: "Compacting document streams and cross-references",
-  });
+  checkAborted(signal);
 
-  // Losslessly Flate-compress uncompressed content/font/data streams
-  for (const { ref, stream } of nonImageRawStreams) {
-    const deflated = await deflateZlib(stream.contents);
-    if (deflated && deflated.length < stream.contents.length * 0.95) {
-      const newDict = stream.dict.clone(pdfDoc.context);
-      newDict.set(PDFName.of("Filter"), PDFName.of("FlateDecode"));
-      newDict.set(PDFName.of("Length"), PDFNumber.of(deflated.length));
-      pdfDoc.context.assign(ref, PDFRawStream.of(newDict, deflated));
+  if (nonImageRawStreams.length > 0) {
+    onProgress?.({
+      stage: "optimizing-structure",
+      percent: nonImageRawStreams.length > 1 ? 0 : null,
+      detail: `${prefix}Compacting document streams (${nonImageRawStreams.length})`,
+    });
+
+    for (let j = 0; j < nonImageRawStreams.length; j += 1) {
+      checkAborted(signal);
+      const { ref, stream } = nonImageRawStreams[j];
+      const cacheKey = `${ref.objectNumber}:${ref.generationNumber}`;
+
+      let deflated: Uint8Array | null;
+      if (deflatedStreamCache.has(cacheKey)) {
+        deflated = deflatedStreamCache.get(cacheKey) ?? null;
+      } else {
+        deflated = deflateStreamSync(pdfDoc, stream.contents);
+        deflatedStreamCache.set(cacheKey, deflated);
+      }
+
+      if (deflated && deflated.length < stream.contents.length * 0.95) {
+        const newDict = stream.dict.clone(pdfDoc.context);
+        newDict.set(PDFName.of("Filter"), PDFName.of("FlateDecode"));
+        newDict.set(PDFName.of("Length"), PDFNumber.of(deflated.length));
+        pdfDoc.context.assign(ref, PDFRawStream.of(newDict, deflated));
+      }
+
+      if (nonImageRawStreams.length > 1) {
+        onProgress?.({
+          stage: "optimizing-structure",
+          percent: Math.round(((j + 1) / nonImageRawStreams.length) * 100),
+          detail: `${prefix}Compacting stream ${j + 1} of ${nonImageRawStreams.length}`,
+        });
+      }
+
+      if ((j + 1) % 8 === 0) {
+        await yieldToEventLoop();
+      }
     }
   }
+
+  checkAborted(signal);
+
+  onProgress?.({
+    stage: "generating",
+    percent: null,
+    detail: `${prefix}Generating compressed PDF`,
+  });
+  await yieldToEventLoop();
 
   const savedBytes = await pdfDoc.save({
     useObjectStreams: true,
@@ -791,26 +859,31 @@ export async function compressPdfBytes(
   sourceBytes: Uint8Array,
   options: CompressPdfOptions,
   reencodeImage: ImageReencoder,
-  onProgress?: (progress: CompressionProgress) => void
+  onProgress?: (progress: CompressionProgress) => void,
+  signal?: AbortSignal
 ): Promise<CompressPdfOutput> {
+  checkAborted(signal);
   const originalSizeBytes = sourceBytes.length;
 
   onProgress?.({
     stage: "reading",
-    percent: 8,
-    detail: "Reading PDF structure",
+    percent: null,
+    detail: "Reading PDF document",
   });
+  await yieldToEventLoop();
 
   const inspection = await inspectPdfBytes(sourceBytes);
+  checkAborted(signal);
 
   onProgress?.({
     stage: "analyzing",
-    percent: 16,
+    percent: null,
     detail:
       inspection.optimizableImageCount > 0
         ? `Found ${inspection.pageCount} ${inspection.pageCount === 1 ? "page" : "pages"} and ${inspection.optimizableImageCount} optimizable ${inspection.optimizableImageCount === 1 ? "image" : "images"}`
-        : `Found ${inspection.pageCount} ${inspection.pageCount === 1 ? "page" : "pages"} (structure optimization)`,
+        : `Found ${inspection.pageCount} ${inspection.pageCount === 1 ? "page" : "pages"} (structure optimisation)`,
   });
+  await yieldToEventLoop();
 
   const targetBytes =
     options.mode === "target" &&
@@ -819,6 +892,7 @@ export async function compressPdfBytes(
       ? options.targetSizeBytes
       : null;
 
+  const deflatedStreamCache = new Map<string, Uint8Array | null>();
   let bestPassResult: Awaited<ReturnType<typeof runSingleCompressionPass>> | null =
     null;
 
@@ -828,7 +902,10 @@ export async function compressPdfBytes(
       RECOMMENDED_PASS,
       options,
       reencodeImage,
-      onProgress
+      deflatedStreamCache,
+      null,
+      onProgress,
+      signal
     );
   } else {
     const passes =
@@ -837,29 +914,20 @@ export async function compressPdfBytes(
         : [TARGET_PASSES[0]];
 
     for (let idx = 0; idx < passes.length; idx += 1) {
+      checkAborted(signal);
       const pass = passes[idx];
+      const passLabel =
+        passes.length > 1 ? `Pass ${idx + 1} of ${passes.length}` : null;
+
       const result = await runSingleCompressionPass(
         sourceBytes,
         pass,
         options,
         reencodeImage,
-        (inner) => {
-          if (!onProgress) return;
-          const base = Math.round((idx / passes.length) * 70) + 15;
-          const span = Math.round(70 / passes.length);
-          const scaled = Math.min(
-            88,
-            base + Math.round((inner.percent / 100) * span)
-          );
-          onProgress({
-            stage: inner.stage,
-            percent: scaled,
-            detail:
-              passes.length > 1
-                ? `Pass ${idx + 1}/${passes.length}: ${inner.detail}`
-                : inner.detail,
-          });
-        }
+        deflatedStreamCache,
+        passLabel,
+        onProgress,
+        signal
       );
 
       if (!bestPassResult || result.bytes.length < bestPassResult.bytes.length) {
@@ -873,15 +941,18 @@ export async function compressPdfBytes(
     }
   }
 
+  checkAborted(signal);
+
   if (!bestPassResult) {
     throw new Error("Unable to produce an optimised PDF output.");
   }
 
   onProgress?.({
     stage: "verifying",
-    percent: 95,
+    percent: null,
     detail: "Verifying compressed PDF integrity",
   });
+  await yieldToEventLoop();
 
   // Validate generated PDF integrity and page count
   const verifiedDoc = await PDFDocument.load(bestPassResult.bytes, {
@@ -928,12 +999,6 @@ export async function compressPdfBytes(
         ? `Could not reach ${formatPdfBytes(targetBytes)} because this PDF contains mostly text, fonts, or vector graphics rather than compressible images. Here is the smallest valid version (${formatPdfBytes(outputSizeBytes)}).`
         : `Could not safely reach ${formatPdfBytes(targetBytes)} while keeping the document readable. Here is the smallest readable version (${formatPdfBytes(outputSizeBytes)}).`;
   }
-
-  onProgress?.({
-    stage: "verifying",
-    percent: 100,
-    detail: "Done",
-  });
 
   return {
     compressedBytes: bestPassResult.bytes,

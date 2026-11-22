@@ -6,6 +6,27 @@ import {
   type ImageReencoder,
 } from "./pdf-compression";
 
+const IMAGE_OPERATION_TIMEOUT_MS = 15_000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Image operation timed out"));
+    }, timeoutMs);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
 const reencodeInWorker: ImageReencoder = async ({
   kind,
   bytes,
@@ -15,6 +36,9 @@ const reencodeInWorker: ImageReencoder = async ({
   quality,
 }) => {
   if (typeof OffscreenCanvas === "undefined") {
+    return null;
+  }
+  if (width <= 0 || height <= 0 || bytes.byteLength === 0) {
     return null;
   }
 
@@ -27,6 +51,8 @@ const reencodeInWorker: ImageReencoder = async ({
   }
 
   let bitmap: ImageBitmap | null = null;
+  let srcCanvas: OffscreenCanvas | null = null;
+  let dstCanvas: OffscreenCanvas | null = null;
 
   try {
     if (kind === "jpeg") {
@@ -34,10 +60,13 @@ const reencodeInWorker: ImageReencoder = async ({
       const copy = new Uint8Array(bytes.byteLength);
       copy.set(bytes);
       const blob = new Blob([copy], { type: "image/jpeg" });
-      bitmap = await createImageBitmap(blob);
+      bitmap = await withTimeout(
+        createImageBitmap(blob),
+        IMAGE_OPERATION_TIMEOUT_MS
+      );
 
-      const canvas = new OffscreenCanvas(outWidth, outHeight);
-      const ctx = canvas.getContext("2d");
+      dstCanvas = new OffscreenCanvas(outWidth, outHeight);
+      const ctx = dstCanvas.getContext("2d");
       if (!ctx) return null;
 
       ctx.fillStyle = "#FFFFFF";
@@ -46,18 +75,26 @@ const reencodeInWorker: ImageReencoder = async ({
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(bitmap, 0, 0, outWidth, outHeight);
 
-      const outBlob = await canvas.convertToBlob({
-        type: "image/jpeg",
-        quality,
-      });
-      const outBytes = new Uint8Array(await outBlob.arrayBuffer());
-      canvas.width = 0;
-      canvas.height = 0;
-      return { jpegBytes: outBytes, width: outWidth, height: outHeight };
+      const outBlob = await withTimeout(
+        dstCanvas.convertToBlob({
+          type: "image/jpeg",
+          quality,
+        }),
+        IMAGE_OPERATION_TIMEOUT_MS
+      );
+      const outBuf = await withTimeout(
+        outBlob.arrayBuffer(),
+        IMAGE_OPERATION_TIMEOUT_MS
+      );
+      return {
+        jpegBytes: new Uint8Array(outBuf),
+        width: outWidth,
+        height: outHeight,
+      };
     }
 
     // Raw RGBA pixel buffer
-    const srcCanvas = new OffscreenCanvas(width, height);
+    srcCanvas = new OffscreenCanvas(width, height);
     const srcCtx = srcCanvas.getContext("2d");
     if (!srcCtx) return null;
 
@@ -66,7 +103,7 @@ const reencodeInWorker: ImageReencoder = async ({
     const imageData = new ImageData(clamped, width, height);
     srcCtx.putImageData(imageData, 0, 0);
 
-    const dstCanvas =
+    dstCanvas =
       outWidth === width && outHeight === height
         ? srcCanvas
         : new OffscreenCanvas(outWidth, outHeight);
@@ -83,19 +120,35 @@ const reencodeInWorker: ImageReencoder = async ({
       srcCanvas.height = 0;
     }
 
-    const outBlob = await dstCanvas.convertToBlob({
-      type: "image/jpeg",
-      quality,
-    });
-    const outBytes = new Uint8Array(await outBlob.arrayBuffer());
-    dstCanvas.width = 0;
-    dstCanvas.height = 0;
-    return { jpegBytes: outBytes, width: outWidth, height: outHeight };
+    const outBlob = await withTimeout(
+      dstCanvas.convertToBlob({
+        type: "image/jpeg",
+        quality,
+      }),
+      IMAGE_OPERATION_TIMEOUT_MS
+    );
+    const outBuf = await withTimeout(
+      outBlob.arrayBuffer(),
+      IMAGE_OPERATION_TIMEOUT_MS
+    );
+    return {
+      jpegBytes: new Uint8Array(outBuf),
+      width: outWidth,
+      height: outHeight,
+    };
   } catch {
     return null;
   } finally {
     if (bitmap) {
       bitmap.close();
+    }
+    if (srcCanvas) {
+      srcCanvas.width = 0;
+      srcCanvas.height = 0;
+    }
+    if (dstCanvas && dstCanvas !== srcCanvas) {
+      dstCanvas.width = 0;
+      dstCanvas.height = 0;
     }
   }
 };

@@ -11,6 +11,30 @@ import {
   type PdfInspectionResult,
 } from "./pdf-compression";
 
+const IMAGE_OPERATION_TIMEOUT_MS = 15_000;
+const INSPECT_TIMEOUT_MS = 30_000;
+const COMPRESS_INACTIVITY_TIMEOUT_MS = 45_000;
+const COMPRESS_MAX_TIMEOUT_MS = 180_000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Operation timed out"));
+    }, timeoutMs);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
 const reencodeOnMainThread: ImageReencoder = async ({
   kind,
   bytes,
@@ -20,6 +44,7 @@ const reencodeOnMainThread: ImageReencoder = async ({
   quality,
 }) => {
   if (typeof document === "undefined") return null;
+  if (width <= 0 || height <= 0 || bytes.byteLength === 0) return null;
 
   let outWidth = width;
   let outHeight = height;
@@ -40,12 +65,15 @@ const reencodeOnMainThread: ImageReencoder = async ({
       const blob = new Blob([copy], { type: "image/jpeg" });
       objectUrl = URL.createObjectURL(blob);
 
-      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const el = new Image();
-        el.onload = () => resolve(el);
-        el.onerror = () => reject(new Error("Image decode error"));
-        el.src = objectUrl!;
-      });
+      const img = await withTimeout(
+        new Promise<HTMLImageElement>((resolve, reject) => {
+          const el = new Image();
+          el.onload = () => resolve(el);
+          el.onerror = () => reject(new Error("Image decode error"));
+          el.src = objectUrl!;
+        }),
+        IMAGE_OPERATION_TIMEOUT_MS
+      );
 
       dstCanvas.width = outWidth;
       dstCanvas.height = outHeight;
@@ -76,12 +104,22 @@ const reencodeOnMainThread: ImageReencoder = async ({
       dstCtx.drawImage(srcCanvas, 0, 0, outWidth, outHeight);
     }
 
-    const outBlob = await new Promise<Blob | null>((resolve) =>
-      dstCanvas.toBlob(resolve, "image/jpeg", quality)
+    const outBlob = await withTimeout(
+      new Promise<Blob | null>((resolve) =>
+        dstCanvas.toBlob(resolve, "image/jpeg", quality)
+      ),
+      IMAGE_OPERATION_TIMEOUT_MS
     );
     if (!outBlob) return null;
-    const outBytes = new Uint8Array(await outBlob.arrayBuffer());
-    return { jpegBytes: outBytes, width: outWidth, height: outHeight };
+    const outBuf = await withTimeout(
+      outBlob.arrayBuffer(),
+      IMAGE_OPERATION_TIMEOUT_MS
+    );
+    return {
+      jpegBytes: new Uint8Array(outBuf),
+      width: outWidth,
+      height: outHeight,
+    };
   } catch {
     return null;
   } finally {
@@ -107,7 +145,10 @@ export async function inspectPdfFileInBrowser(
 
   if (!canUseWorker()) {
     try {
-      return await inspectPdfBytes(new Uint8Array(buffer));
+      return await withTimeout(
+        inspectPdfBytes(new Uint8Array(buffer)),
+        INSPECT_TIMEOUT_MS
+      );
     } catch (error) {
       throw new Error(translatePdfError(error));
     }
@@ -120,28 +161,59 @@ export async function inspectPdfFileInBrowser(
         new URL("./pdf-compression.worker.ts", import.meta.url)
       );
     } catch {
-      inspectPdfBytes(new Uint8Array(buffer))
+      withTimeout(inspectPdfBytes(new Uint8Array(buffer)), INSPECT_TIMEOUT_MS)
         .then(resolve)
         .catch((err) => reject(new Error(translatePdfError(err))));
       return;
     }
 
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      worker.terminate();
+      reject(
+        new Error(
+          "Reading this PDF took too long. Please check the file or try another document."
+        )
+      );
+    }, INSPECT_TIMEOUT_MS);
+
+    const finish = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      worker.terminate();
+      fn();
+    };
+
     worker.onmessage = (event: MessageEvent) => {
       const msg = event.data;
       if (msg.type === "inspect-result") {
-        worker.terminate();
-        resolve(msg.info as PdfInspectionResult);
+        finish(() => resolve(msg.info as PdfInspectionResult));
       } else if (msg.type === "error") {
-        worker.terminate();
-        reject(new Error(msg.message));
+        finish(() => reject(new Error(msg.message)));
       }
     };
 
+    worker.onmessageerror = () => {
+      finish(() =>
+        reject(
+          new Error("Could not read this PDF in the browser worker. Please try again.")
+        )
+      );
+    };
+
     worker.onerror = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       worker.terminate();
       void file
         .arrayBuffer()
-        .then((buf) => inspectPdfBytes(new Uint8Array(buf)))
+        .then((buf) =>
+          withTimeout(inspectPdfBytes(new Uint8Array(buf)), INSPECT_TIMEOUT_MS)
+        )
         .then(resolve)
         .catch((err) => reject(new Error(translatePdfError(err))));
     };
@@ -160,12 +232,23 @@ export function compressPdfFileInBrowser(
 } {
   let activeWorker: Worker | null = null;
   let cancelled = false;
+  const abortController = new AbortController();
+  let rejectPending: ((reason?: unknown) => void) | null = null;
+  let cleanupTimers: (() => void) | null = null;
 
   const cancel = () => {
     cancelled = true;
+    abortController.abort();
+    cleanupTimers?.();
+    cleanupTimers = null;
     if (activeWorker) {
       activeWorker.terminate();
       activeWorker = null;
+    }
+    if (rejectPending) {
+      const rejectFn = rejectPending;
+      rejectPending = null;
+      rejectFn(new Error("Compression cancelled."));
     }
   };
 
@@ -181,7 +264,8 @@ export function compressPdfFileInBrowser(
           new Uint8Array(buffer),
           options,
           reencodeOnMainThread,
-          onProgress
+          onProgress,
+          abortController.signal
         );
       } catch (error) {
         throw new Error(translatePdfError(error));
@@ -189,32 +273,90 @@ export function compressPdfFileInBrowser(
     }
 
     return new Promise<CompressPdfOutput>((resolve, reject) => {
+      let settled = false;
+      let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
+      let maxTimer: ReturnType<typeof setTimeout> | null = null;
+
+      const clearAllTimers = () => {
+        if (inactivityTimer) {
+          clearTimeout(inactivityTimer);
+          inactivityTimer = null;
+        }
+        if (maxTimer) {
+          clearTimeout(maxTimer);
+          maxTimer = null;
+        }
+      };
+
+      cleanupTimers = clearAllTimers;
+      rejectPending = (err) => {
+        if (settled) return;
+        settled = true;
+        clearAllTimers();
+        reject(err);
+      };
+
+      const failWithTimeout = (message: string) => {
+        if (settled || cancelled) return;
+        settled = true;
+        rejectPending = null;
+        clearAllTimers();
+        activeWorker?.terminate();
+        activeWorker = null;
+        reject(new Error(message));
+      };
+
+      const resetInactivityTimer = () => {
+        if (inactivityTimer) clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+          failWithTimeout(
+            "PDF compression stopped responding while processing this document. Please try again."
+          );
+        }, COMPRESS_INACTIVITY_TIMEOUT_MS);
+      };
+
       try {
         activeWorker = new Worker(
           new URL("./pdf-compression.worker.ts", import.meta.url)
         );
       } catch {
+        clearAllTimers();
+        rejectPending = null;
         compressPdfBytes(
           new Uint8Array(buffer),
           options,
           reencodeOnMainThread,
-          onProgress
+          onProgress,
+          abortController.signal
         )
           .then(resolve)
           .catch((err) => reject(new Error(translatePdfError(err))));
         return;
       }
 
+      maxTimer = setTimeout(() => {
+        failWithTimeout(
+          "PDF compression exceeded the browser processing time limit. Please try again with a smaller file."
+        );
+      }, COMPRESS_MAX_TIMEOUT_MS);
+      resetInactivityTimer();
+
       activeWorker.onmessage = (event: MessageEvent) => {
-        if (cancelled) {
+        if (settled || cancelled) {
+          clearAllTimers();
           activeWorker?.terminate();
           activeWorker = null;
           return;
         }
+
         const msg = event.data;
         if (msg.type === "progress") {
+          resetInactivityTimer();
           onProgress?.(msg.progress as CompressionProgress);
         } else if (msg.type === "compress-result") {
+          settled = true;
+          rejectPending = null;
+          clearAllTimers();
           activeWorker?.terminate();
           activeWorker = null;
           const result = msg.result as CompressPdfOutput;
@@ -223,28 +365,56 @@ export function compressPdfFileInBrowser(
             : null;
           resolve({ ...result, compressedBytes });
         } else if (msg.type === "error") {
+          settled = true;
+          rejectPending = null;
+          clearAllTimers();
           activeWorker?.terminate();
           activeWorker = null;
           reject(new Error(msg.message));
         }
       };
 
-      activeWorker.onerror = () => {
+      activeWorker.onmessageerror = () => {
+        if (settled || cancelled) return;
+        settled = true;
+        rejectPending = null;
+        clearAllTimers();
         activeWorker?.terminate();
         activeWorker = null;
-        if (cancelled) return;
+        reject(
+          new Error("Unable to read compression output from worker. Please try again.")
+        );
+      };
+
+      activeWorker.onerror = () => {
+        if (settled || cancelled) return;
+        clearAllTimers();
+        activeWorker?.terminate();
+        activeWorker = null;
         void file
           .arrayBuffer()
-          .then((fallbackBuf) =>
-            compressPdfBytes(
+          .then((fallbackBuf) => {
+            if (cancelled) throw new Error("Compression cancelled.");
+            return compressPdfBytes(
               new Uint8Array(fallbackBuf),
               options,
               reencodeOnMainThread,
-              onProgress
-            )
-          )
-          .then(resolve)
-          .catch((err) => reject(new Error(translatePdfError(err))));
+              onProgress,
+              abortController.signal
+            );
+          })
+          .then((res) => {
+            if (settled) return;
+            settled = true;
+            rejectPending = null;
+            resolve(res);
+          })
+          .catch((err) => {
+            if (settled) return;
+            settled = true;
+            rejectPending = null;
+            reject(new Error(translatePdfError(err)));
+          });
       };
 
       activeWorker.postMessage(

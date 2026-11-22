@@ -14,8 +14,18 @@ import {
   type CompressPdfOutput,
   type CompressionMode,
   type CompressionProgress,
+  type CompressionStage,
   type PdfInspectionResult,
 } from "@/lib/pdf/pdf-compression";
+
+const STAGE_LABELS: Record<CompressionStage, string> = {
+  reading: "Reading",
+  analyzing: "Inspecting",
+  "compressing-images": "Optimising images",
+  "optimizing-structure": "Optimising structure",
+  generating: "Generating PDF",
+  verifying: "Verifying PDF",
+};
 
 function PdfDocumentIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -275,7 +285,10 @@ export function PdfCompressor() {
 
     let targetBytes: number | null = null;
     if (effectiveMode === "target") {
-      if (!Number.isFinite(effectiveVal) || effectiveVal < 10 && effectiveUnit === "KB") {
+      if (
+        !Number.isFinite(effectiveVal) ||
+        (effectiveVal < 10 && effectiveUnit === "KB")
+      ) {
         setErrorMessage("Enter a custom target size of at least 10 KB.");
         return;
       }
@@ -306,7 +319,7 @@ export function PdfCompressor() {
     setIsCompressing(true);
     setProgress({
       stage: "reading",
-      percent: 5,
+      percent: null,
       detail: "Starting local PDF compression",
     });
 
@@ -401,9 +414,18 @@ export function PdfCompressor() {
       {errorMessage ? (
         <div
           role="alert"
-          className="rounded-xl border border-[#B44A4A]/40 bg-[#FDF5F5] px-4 py-3 text-sm text-[#7A2727]"
+          className="flex flex-col gap-3 rounded-xl border border-[#B44A4A]/40 bg-[#FDF5F5] px-4 py-3 text-sm text-[#7A2727] sm:flex-row sm:items-center sm:justify-between"
         >
-          {errorMessage}
+          <span>{errorMessage}</span>
+          {loadedPdf && !isCompressing ? (
+            <button
+              type="button"
+              onClick={() => void runCompression()}
+              className="inline-flex min-h-[36px] shrink-0 items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1.5 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              Try again
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -473,14 +495,14 @@ export function PdfCompressor() {
                   type="button"
                   disabled={isCompressing}
                   onClick={() => fileInputRef.current?.click()}
-                  className="min-h-[36px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="min-h-[40px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                 >
                   Replace
                 </button>
                 <button
                   type="button"
                   onClick={handleRemoveFile}
-                  className="min-h-[36px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="min-h-[40px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                 >
                   Remove
                 </button>
@@ -515,31 +537,42 @@ export function PdfCompressor() {
               </p>
             ) : null}
 
-            {/* Genuine Progress Bar */}
+            {/* Honest Progress Indicator */}
             {isCompressing && progress ? (
               <div
                 aria-live="polite"
                 className="space-y-2.5 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/65 p-4"
               >
-                <div className="flex items-center justify-between gap-2 text-xs">
-                  <span className="font-medium text-[#20272B]">
-                    {progress.detail}
-                  </span>
-                  <span className="font-mono text-[#5C7E8F] tabular-nums">
-                    {progress.percent}%
+                <div className="flex items-baseline justify-between gap-2 text-xs">
+                  <div className="min-w-0">
+                    <span className="font-semibold text-[#20272B]">
+                      {STAGE_LABELS[progress.stage]}
+                    </span>
+                    <span className="ml-2 text-[#556168]">
+                      {progress.detail}
+                    </span>
+                  </div>
+                  <span className="shrink-0 font-mono text-[#5C7E8F] tabular-nums">
+                    {progress.percent !== null
+                      ? `${progress.percent}%`
+                      : "Working"}
                   </span>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#D4DDE2]">
-                  <div
-                    className="h-full rounded-full bg-[#426579] transition-all duration-150"
-                    style={{ width: `${progress.percent}%` }}
-                  />
+                  {progress.percent !== null ? (
+                    <div
+                      className="h-full rounded-full bg-[#426579] transition-all duration-150"
+                      style={{ width: `${progress.percent}%` }}
+                    />
+                  ) : (
+                    <div className="h-full w-1/3 rounded-full bg-[#426579] animate-binro-indeterminate" />
+                  )}
                 </div>
                 <div className="flex justify-end">
                   <button
                     type="button"
                     onClick={handleCancelCompression}
-                    className="text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] rounded-sm"
+                    className="min-h-[36px] rounded-md px-2 text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                   >
                     Cancel
                   </button>
