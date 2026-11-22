@@ -1,7 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDownIcon } from "@/components/ui/Icons";
+import { useState, type SVGProps } from "react";
+
+function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.65}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
+    </svg>
+  );
+}
 
 interface HelpItem {
   id: string;

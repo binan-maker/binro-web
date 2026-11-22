@@ -152,7 +152,9 @@ export function OfflineServiceWorker() {
       try {
         const registration = await navigator.serviceWorker.register("/sw.js", {
           scope: "/",
+          updateViaCache: "none",
         });
+        void registration.update();
         await navigator.serviceWorker.ready;
 
         const activeWorker =

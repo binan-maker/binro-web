@@ -92,6 +92,31 @@ export const UTILITY_TOOLS: UtilityTool[] = [
       "dimensions",
     ],
   },
+  {
+    id: "pdf-compressor",
+    name: "BinRo PDF Compressor",
+    description:
+      "Make your PDF smaller. Keep it readable. Reduce PDF file size for online applications and uploads directly in your browser.",
+    categoryId: "pdf-document-tools",
+    href: "/utilities/pdf-compressor",
+    status: "available",
+    keywords: [
+      "pdf",
+      "compress",
+      "compressor",
+      "reduce",
+      "size",
+      "kb",
+      "mb",
+      "100kb",
+      "200kb",
+      "300kb",
+      "500kb",
+      "1mb",
+      "document",
+      "application",
+    ],
+  },
 ];
 
 export function getUtilityCategoryById(

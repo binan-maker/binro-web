@@ -1,4 +1,4 @@
-const CACHE_VERSION = "binro-utilities-v1";
+const CACHE_VERSION = "binro-utilities-v2";
 const CORE_SHELL_URLS = [
   "/utilities/image-resizer",
   "/utilities",
@@ -9,9 +9,12 @@ const CORE_SHELL_URLS = [
   "/apple-touch-icon.png",
 ];
 
-function isCacheableStaticPath(pathname) {
+function isNextStaticPath(pathname) {
+  return pathname.startsWith("/_next/static/");
+}
+
+function isStaticAssetPath(pathname) {
   return (
-    pathname.startsWith("/_next/static/") ||
     pathname.startsWith("/icons/") ||
     pathname === "/manifest.webmanifest" ||
     pathname === "/apple-touch-icon.png" ||
@@ -82,18 +85,19 @@ self.addEventListener("message", (event) => {
     await Promise.allSettled(
       uniqueSameOriginUrls.map(async (targetUrl) => {
         try {
-          const existing = await cache.match(targetUrl);
-          if (existing) {
-            cachedCount += 1;
-            return;
-          }
-          const response = await fetch(targetUrl, { credentials: "same-origin" });
+          const response = await fetch(targetUrl, {
+            credentials: "same-origin",
+            cache: "no-cache",
+          });
           if (response && response.ok) {
             await cache.put(targetUrl, response);
             cachedCount += 1;
           }
         } catch {
-          // Ignore single fetch failure when offline or transient.
+          const existing = await cache.match(targetUrl);
+          if (existing) {
+            cachedCount += 1;
+          }
         }
       })
     );
@@ -122,7 +126,7 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // Only cache same-origin requests; never cache external or blob/data URLs.
+  // Only handle same-origin requests; never cache external or blob/data URLs.
   if (url.origin !== self.location.origin) {
     return;
   }
@@ -168,8 +172,31 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for immutable Next.js static bundles, fonts, CSS, icons, and manifest.
-  if (isCacheableStaticPath(url.pathname)) {
+  // Network-first with cache fallback for Next.js static bundles so fresh builds/dev chunks never mismatch.
+  if (isNextStaticPath(url.pathname)) {
+    event.respondWith(
+      fetch(request)
+        .then(async (networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const cache = await caches.open(CACHE_VERSION);
+            await cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cache = await caches.open(CACHE_VERSION);
+          const cached = await cache.match(request);
+          return (
+            cached ||
+            new Response("", { status: 504, statusText: "Offline asset miss" })
+          );
+        })
+    );
+    return;
+  }
+
+  // Cache-first for static app icons and manifest.
+  if (isStaticAssetPath(url.pathname)) {
     event.respondWith(
       caches.open(CACHE_VERSION).then(async (cache) => {
         const cached = await cache.match(request);

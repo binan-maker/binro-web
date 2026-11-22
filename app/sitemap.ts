@@ -29,7 +29,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority:
       route === ""
         ? 1.0
-        : route === "/utilities" || route === "/utilities/image-resizer"
+        : route === "/utilities" ||
+            route === "/utilities/image-resizer" ||
+            route === "/utilities/pdf-compressor"
           ? 0.9
           : route === "/about"
             ? 0.8

@@ -11,13 +11,81 @@ import {
   type ProcessedImageResult,
   type SupportedMimeType,
 } from "@/lib/image/image-processing";
-import {
-  ChevronDownIcon,
-  DownloadIcon,
-  LockIcon,
-  UploadImageIcon,
-} from "@/components/ui/Icons";
 import { OfflineServiceWorker } from "@/components/utilities/OfflineServiceWorker";
+import type { SVGProps } from "react";
+
+function UploadImageIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <circle cx="8.75" cy="9.75" r="1.35" />
+      <path d="m6.5 16.5 4-4 2.75 2.75 2.75-3.25 3.5 4.5" />
+    </svg>
+  );
+}
+
+function LockIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="4.5" y="9" width="11" height="7.5" rx="1.75" />
+      <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.65}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
+    </svg>
+  );
+}
+
+function DownloadIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.65}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M10 3.5v9.5" />
+      <path d="m6.5 9.5 3.5 3.5 3.5-3.5" />
+      <path d="M4 15.5h12" />
+    </svg>
+  );
+}
 
 const TARGET_SIZE_PRESETS = [20, 50, 100, 200, 500] as const;
 
