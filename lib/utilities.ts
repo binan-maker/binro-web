@@ -123,6 +123,27 @@ export const UTILITY_TOOLS: UtilityTool[] = [
       "application",
     ],
   },
+  {
+    id: "pdf-merger",
+    name: "BinRo PDF Merger",
+    shortTitle: "PDF Merger",
+    shortDescription: "Combine multiple PDF files into one document.",
+    description:
+      "Combine multiple PDF files into one document, in the order you choose, directly in your browser.",
+    categoryId: "pdf-document-tools",
+    href: "/utilities/pdf-merger",
+    status: "available",
+    keywords: [
+      "pdf",
+      "merge",
+      "merger",
+      "combine",
+      "join",
+      "concatenate",
+      "multiple",
+      "document",
+    ],
+  },
 ];
 
 export function getUtilityCategoryById(
