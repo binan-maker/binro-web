@@ -6,20 +6,12 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ category, index }: ProductCardProps) {
-  const isActive = category.status === "Active direction";
-
   return (
-    <article
-      className={`flex flex-col justify-between rounded-2xl border p-6 transition-colors duration-150 ${
-        isActive
-          ? "border-[#5C7E8F] bg-[#F3F6F7]"
-          : "border-[#D4DDE2] bg-white hover:border-[#5C7E8F]/70"
-      }`}
-    >
+    <article className="flex flex-col justify-between rounded-2xl border border-[#D4DDE2] bg-white p-6 transition-colors duration-150 hover:border-[#5C7E8F]/70">
       <div>
         <div className="flex items-center justify-between gap-4 text-xs">
           <span className="font-medium text-[#5C7E8F]">
-            {category.group ? category.group : "Product area"}
+            {category.group ? category.group : "Future product area"}
           </span>
           {typeof index === "number" ? (
             <span className="font-mono text-[#A2A2A2] tabular-nums">

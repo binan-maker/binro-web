@@ -47,8 +47,7 @@ export default function PrivacyPage() {
               </p>
               <p className="mt-3 text-sm text-[#426579]">
                 TODO: Confirm separate privacy documentation and link references
-                for standalone products such as BinRo Business (
-                <span className="font-mono">business.binro.in</span>).
+                for any future standalone BinRo products prior to launch.
               </p>
             </section>
 
@@ -86,13 +85,12 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-[#20272B]">
-                4. External links
+                4. External links and future applications
               </h2>
               <p className="mt-3">
-                Pages on this website link to the external BinRo Business
-                application (<span className="font-mono text-sm">business.binro.in</span>).
-                Use of separate applications is governed by the terms and privacy
-                practices specific to those applications.
+                If pages on this website link to external services or future
+                BinRo applications, use of those services will be governed by
+                the privacy practices specific to them.
               </p>
             </section>
 

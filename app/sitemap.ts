@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { SITE_CONFIG } from "@/lib/site";
+import { UTILITY_TOOLS } from "@/lib/utilities";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = [
+  const staticRoutes = [
     "",
     "/utilities",
     "/business",
@@ -14,12 +15,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terms",
   ];
 
-  const lastModified = new Date("2026-11-01T00:00:00.000Z");
+  const availableToolRoutes = UTILITY_TOOLS.filter(
+    (tool) => tool.status === "available"
+  ).map((tool) => tool.href);
 
-  return routes.map((route) => ({
+  const allRoutes = [...staticRoutes, ...availableToolRoutes];
+  const lastModified = new Date("2026-11-22T00:00:00.000Z");
+
+  return allRoutes.map((route) => ({
     url: `${SITE_CONFIG.url}${route}`,
     lastModified,
     changeFrequency: route === "" ? "weekly" : "monthly",
-    priority: route === "" ? 1.0 : route === "/about" ? 0.8 : 0.7,
+    priority:
+      route === ""
+        ? 1.0
+        : route === "/utilities" || route === "/utilities/image-resizer"
+          ? 0.9
+          : route === "/about"
+            ? 0.8
+            : 0.7,
   }));
 }

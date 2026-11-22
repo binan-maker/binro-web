@@ -1,0 +1,31 @@
+{
+  "id": "/utilities/image-resizer",
+  "name": "BinRo Utilities — Image Resizer",
+  "short_name": "BinRo",
+  "description": "Resize and compress photos and signatures privately in your browser.",
+  "start_url": "/utilities/image-resizer",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

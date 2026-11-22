@@ -65,9 +65,10 @@ export default function TermsPage() {
                 3. Separate application terms
               </h2>
               <p className="mt-3">
-                Access to and use of operational software such as BinRo Business
-                (<span className="font-mono text-sm">business.binro.in</span>) is
-                subject to separate application-specific terms and policies.
+                Access to and use of any future standalone BinRo software
+                applications or services will be governed by separate
+                application-specific terms and policies published alongside
+                those products.
               </p>
             </section>
 

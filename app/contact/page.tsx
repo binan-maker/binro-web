@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_CONFIG } from "@/lib/site";
 import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
-import { ArrowUpRightIcon } from "@/components/ui/Icons";
+import { ArrowRightIcon } from "@/components/ui/Icons";
 
 export const metadata: Metadata = {
   title: "Contact BinRo",
@@ -26,15 +25,14 @@ const ENQUIRY_CHANNELS = [
     index: "02",
     title: "Product enquiries",
     description:
-      "Questions about BinRo Business or upcoming directions across BinRo Utilities and BinRo Intelligence.",
-    status:
-      "Existing BinRo Business operators can access the dedicated application portal directly.",
+      "Questions about upcoming product directions across BinRo Utilities, BinRo Business, and BinRo Intelligence.",
+    status: "Product enquiry channels to be published prior to public launch.",
   },
   {
     index: "03",
     title: "Business partnerships",
     description:
-      "Collaborations with accommodation operators, local enterprises, and technology partners.",
+      "Collaborations with organisations, local enterprises, and technology partners.",
     status: "Partnership contact details to be published prior to public launch.",
   },
   {
@@ -83,13 +81,9 @@ export default function ContactPage() {
                 </p>
               </div>
               <div className="lg:col-span-4 lg:flex lg:justify-end">
-                <ButtonLink
-                  href={SITE_CONFIG.businessAppUrl}
-                  variant="primary"
-                  external
-                >
-                  <span>Visit BinRo Business</span>
-                  <ArrowUpRightIcon className="h-4 w-4" />
+                <ButtonLink href="/about" variant="primary">
+                  <span>About BinRo</span>
+                  <ArrowRightIcon className="h-4 w-4" />
                 </ButtonLink>
               </div>
             </div>

@@ -15,7 +15,6 @@ export const SITE_CONFIG = {
   description:
     "BinRo builds useful digital products, business software, developer tools and intelligent systems to make technology more accessible, understandable and useful.",
   url: "https://binro.in",
-  businessAppUrl: "https://business.binro.in",
   originRegion: "India",
 } as const;
 

@@ -4,7 +4,7 @@ export interface ProductCategory {
   title: string;
   description: string;
   group?: string;
-  status: "Active direction" | "Planned direction";
+  status: "Planned direction";
 }
 
 export interface DivisionInfo {
@@ -32,59 +32,52 @@ export const DIVISIONS: DivisionInfo[] = [
     tagline: "Everyday technology, made simple.",
     summary: "Digital tools that help people complete everyday tasks.",
     overview:
-      "BinRo Utilities is focused on helping individuals, students, and professionals complete everyday digital tasks quickly, reliably, and without unnecessary complexity.",
+      "Useful digital tools that help people complete everyday tasks more easily, privately and efficiently.",
     statusNote:
-      "This collection is currently being planned and developed. The categories below outline future product directions rather than live tools.",
+      "BinRo Utilities is organised as a growing directory under /utilities. Tools are listed here as they are prepared and published—nothing is marked usable until the working tool exists.",
     accentColor: "#5C7E8F",
     accentSurface: "#F3F6F7",
     categories: [
       {
-        title: "PDF and document tools",
+        title: "Image Tools",
         description:
-          "Straightforward utilities for reading, organising, merging, splitting, and preparing everyday documents.",
-        group: "Documents & Files",
+          "Browser-based utilities for resizing, compressing, and preparing photographs, signatures, and visual assets.",
+        group: "Category A",
         status: "Planned direction",
       },
       {
-        title: "Image editing and compression",
+        title: "PDF and Document Tools",
         description:
-          "Lightweight tools to resize, crop, optimise, and prepare visual files without heavy desktop software.",
-        group: "Visual & Media",
+          "Practical tools for organising, combining, splitting, and preparing everyday documents.",
+        group: "Category B",
         status: "Planned direction",
       },
       {
-        title: "File conversion",
+        title: "File Conversion",
         description:
-          "Clean format conversion workflows across common document, image, and structured data types.",
-        group: "Documents & Files",
+          "Straightforward conversion between common document, image, and data formats.",
+        group: "Category C",
         status: "Planned direction",
       },
       {
-        title: "Text utilities",
+        title: "Text Utilities",
         description:
-          "Practical formatting, comparison, cleanup, and writing support utilities for daily digital work.",
-        group: "Everyday Productivity",
+          "Formatting, comparison, cleanup, and writing utilities for daily digital work.",
+        group: "Category D",
         status: "Planned direction",
       },
       {
         title: "Calculators",
         description:
-          "Focused financial, academic, unit, and operational calculators designed for clarity and speed.",
-        group: "Everyday Productivity",
+          "Focused financial, academic, unit, and everyday calculation tools designed for clarity.",
+        group: "Category E",
         status: "Planned direction",
       },
       {
-        title: "Productivity tools",
+        title: "Productivity Tools",
         description:
-          "Focused browser-friendly utilities that reduce friction in recurring personal and professional tasks.",
-        group: "Everyday Productivity",
-        status: "Planned direction",
-      },
-      {
-        title: "Student and professional utilities",
-        description:
-          "Accessible study, reference, and everyday preparation tools built for clarity across desktop and mobile.",
-        group: "Everyday Productivity",
+          "Lightweight utilities that reduce friction in recurring personal, study, and professional tasks.",
+        group: "Category F",
         status: "Planned direction",
       },
     ],
@@ -99,73 +92,66 @@ export const DIVISIONS: DivisionInfo[] = [
     summary:
       "Applications that help businesses manage and improve their operations.",
     overview:
-      "BinRo Business builds operational software that helps organisations manage daily workflows, properties, customers, staff, inventory, and finances with clarity.",
+      "BinRo Business aims to build useful software that helps businesses manage their operations, customers, employees, inventory and workflows.",
     statusNote:
-      "BinRo Business is actively developing its PG and Hostel Operations Management application while planning broader industry-specific software over time.",
+      "We are developing our vision for useful business software. Explore the areas of technology we aim to build.",
     accentColor: "#426579",
     accentSurface: "#EFF4F6",
     categories: [
       {
-        title: "Accommodation and PG management",
+        title: "Business management software",
         description:
-          "Purpose-built operational software for PG and hostel operators covering properties, rooms, beds, tenants, and rent records.",
-        group: "Active product direction",
-        status: "Active direction",
-      },
-      {
-        title: "Rental property management",
-        description:
-          "Structured tracking for leases, occupancy schedules, maintenance records, and recurring collections.",
-        group: "Future planned directions",
+          "Structured operational software to help organisations coordinate daily activities, records, and internal processes with clarity.",
+        group: "Core Operations",
         status: "Planned direction",
       },
       {
         title: "Retail and shop management",
         description:
-          "Everyday point-of-operations software to help local shops and growing retailers manage daily sales and records.",
-        group: "Future planned directions",
+          "Everyday software designed to help local shops and growing retailers manage daily sales, counter operations, and records.",
+        group: "Commerce & Sales",
         status: "Planned direction",
       },
       {
         title: "Inventory and stock management",
         description:
           "Clear stock tracking, reorder visibility, and movement logs across locations and suppliers.",
-        group: "Future planned directions",
+        group: "Core Operations",
         status: "Planned direction",
       },
       {
-        title: "Customer management (CRM)",
+        title: "Customer relationship management",
         description:
           "Organised customer histories, follow-up tracking, and service records built for small and mid-sized teams.",
-        group: "Future planned directions",
+        group: "Customers & People",
         status: "Planned direction",
       },
       {
-        title: "Billing and finance",
+        title: "Billing and financial tools",
         description:
           "Accurate invoicing, payment records, and clear financial summaries tailored to everyday business workflows.",
-        group: "Future planned directions",
+        group: "Finance & Records",
         status: "Planned direction",
       },
       {
-        title: "Employee and staff management",
+        title: "Employee management",
         description:
           "Attendance, role assignments, shift coordination, and structured team records.",
-        group: "Future planned directions",
+        group: "Customers & People",
         status: "Planned direction",
       },
       {
-        title: "Restaurant management",
+        title: "Business reporting and analytics",
         description:
-          "Order flow, table coordination, kitchen tracking, and daily operational reporting for food businesses.",
-        group: "Future planned directions",
+          "Practical reporting that turns everyday operational records into clearer business visibility.",
+        group: "Intelligence & Insights",
         status: "Planned direction",
       },
       {
-        title: "Business analytics and automation",
+        title: "Workflow automation",
         description:
-          "Practical reporting and workflow automation that turn operational records into clearer decisions.",
-        group: "Future planned directions",
+          "Reliable automation for routine operational steps, reminders, and recurring administrative tasks.",
+        group: "Core Operations",
         status: "Planned direction",
       },
     ],
@@ -318,30 +304,6 @@ export const DIVISIONS: DivisionInfo[] = [
     ],
   },
 ];
-
-export const FEATURED_BUSINESS_PRODUCT = {
-  division: "BinRo Business",
-  title: "PG and Hostel Operations Management",
-  subtitle: "Existing product direction",
-  description:
-    "BinRo Business is being developed to help PG and hostel accommodation operators manage properties, rooms, beds, tenants, rent records, and day-to-day operations from one structured system.",
-  ctaLabel: "Visit BinRo Business",
-  ctaHref: "https://business.binro.in",
-  capabilities: [
-    {
-      label: "Properties & Rooms",
-      detail: "Organise buildings, floors, rooms, and individual bed capacity.",
-    },
-    {
-      label: "Tenant Records",
-      detail: "Maintain clear resident profiles, stays, and occupancy status.",
-    },
-    {
-      label: "Rent & Operations",
-      detail: "Track rent schedules, payment records, and daily property tasks.",
-    },
-  ],
-} as const;
 
 export function getDivisionById(id: DivisionId): DivisionInfo {
   const division = DIVISIONS.find((d) => d.id === id);
