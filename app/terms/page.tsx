@@ -12,23 +12,23 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <section className="bg-white py-14 sm:py-20">
+    <section className="bg-white py-10 sm:py-14 lg:py-16">
       <Container>
-        <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#5C7E8F]">
+        <div className="max-w-[65ch]">
+          <p className="text-xs font-medium tracking-[0.04em] text-[#466677]">
             Legal · Draft
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#20272B] sm:text-4xl text-balance">
+          <h1 className="mt-3 text-[clamp(1.75rem,1.35rem+1.5vw,2.375rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-[#20272B] text-balance">
             Terms Information (Draft)
           </h1>
 
-          <div className="mt-6 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/70 p-4 text-sm leading-relaxed text-[#20272B]">
+          <div className="mt-5 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/70 p-4 text-sm leading-relaxed text-[#20272B] text-pretty">
             <p className="font-medium">
               Pre-launch draft — formal legal review required prior to launch.
             </p>
           </div>
 
-          <div className="mt-10 space-y-8 border-t border-[#D4DDE2] pt-8 text-sm leading-relaxed text-[#556168] sm:text-[0.9375rem]">
+          <div className="mt-8 space-y-7 border-t border-[#D4DDE2] pt-8 text-[0.9375rem] leading-relaxed text-[#556168] text-pretty sm:text-base">
             <section>
               <h2 className="text-base font-semibold text-[#20272B]">
                 1. Informational purpose

@@ -8,6 +8,7 @@
   --text-muted: #556168;
   --text-subtle: #a2a2a2;
   --brand: #5c7e8f;
+  --brand-text: #466677;
   --brand-strong: #426579;
   --brand-hover: #355364;
   --accent-mint: #1cc8a0;
@@ -22,6 +23,7 @@
   --color-frost-border: var(--border);
   --color-muted-grey: var(--text-subtle);
   --color-brand-blue: var(--brand);
+  --color-brand-text: var(--brand-text);
   --color-brand-deep: var(--brand-strong);
   --color-accent-mint: var(--accent-mint);
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -51,12 +53,18 @@ body {
   background-color: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
 .text-balance {
   text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
 }
 
 @keyframes binro-indeterminate {

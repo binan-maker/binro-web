@@ -56,7 +56,7 @@ export default function DeveloperPage() {
         note="In planning — APIs and platform services are not yet publicly launched."
       />
 
-      <section className="bg-white py-14 sm:py-20">
+      <section className="bg-white py-12 sm:py-16">
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-start">
             <div className="lg:col-span-4">
@@ -72,13 +72,13 @@ export default function DeveloperPage() {
                   key={group.layer}
                   className="border-t border-[#D4DDE2] pt-4"
                 >
-                  <p className="font-mono text-xs text-[#A2A2A2] tabular-nums">
+                  <p className="font-mono text-xs font-medium text-[#556168] tabular-nums">
                     {group.index}
                   </p>
                   <h3 className="mt-2 text-base font-semibold text-[#20272B]">
                     {group.layer}
                   </h3>
-                  <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[#556168]">
+                  <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[#556168] text-pretty">
                     {group.items.map((item) => (
                       <li key={item}>{item}</li>
                     ))}
@@ -90,7 +90,7 @@ export default function DeveloperPage() {
         </Container>
       </section>
 
-      <section className="border-t border-[#D4DDE2] bg-white py-14 sm:py-20">
+      <section className="border-t border-[#D4DDE2] bg-white py-12 sm:py-16">
         <Container>
           <SectionHeading
             kicker="Planned categories"

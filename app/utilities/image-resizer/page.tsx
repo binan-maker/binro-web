@@ -23,18 +23,44 @@ export const metadata: Metadata = {
   },
 };
 
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "BinRo Image Resizer",
+  url: `${SITE_CONFIG.url}/utilities/image-resizer`,
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Any",
+  description:
+    "Browser-based image resizer and compressor to resize photos and signatures to exact pixel dimensions and KB file-size limits locally on your device.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "INR",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: SITE_CONFIG.legalName,
+    url: SITE_CONFIG.url,
+  },
+};
+
 export default function ImageResizerPage() {
   return (
-    <div className="bg-[#F3F6F7]/65 py-6 sm:py-10">
+    <div className="bg-[#F3F6F7]/65 py-5 sm:py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
+
       <Container>
         {/* Compact Title & Breadcrumb */}
         <div className="mx-auto max-w-[1040px]">
           <nav aria-label="Breadcrumb" className="text-xs font-medium">
-            <ol className="flex items-center gap-1.5 text-[#5C7E8F]">
+            <ol className="flex items-center gap-1.5 text-[#466677]">
               <li>
                 <Link
                   href="/utilities"
-                  className="hover:text-[#20272B] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] rounded-sm"
+                  className="inline-flex min-h-[32px] items-center rounded-sm underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                 >
                   Utilities
                 </Link>
@@ -44,24 +70,25 @@ export default function ImageResizerPage() {
             </ol>
           </nav>
 
-          <div className="mt-2.5 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-            <h1 className="text-2xl font-semibold tracking-tight text-[#20272B] sm:text-[1.875rem]">
+          <div className="mt-1.5 space-y-1">
+            <h1 className="text-[clamp(1.5rem,1.25rem+1vw,1.875rem)] font-semibold tracking-tight text-[#20272B]">
               Image Resizer
             </h1>
-            <p className="text-sm text-[#4A555C]">
-              Resize and compress images.
+            <p className="max-w-[62ch] text-sm leading-relaxed text-[#556168] text-pretty">
+              Resize photos and signatures to exact pixel dimensions or KB limits
+              locally in your browser.
             </p>
           </div>
         </div>
 
         {/* Main Application */}
-        <div className="mt-5 sm:mt-6">
+        <div className="mt-4 sm:mt-5">
           <ImageResizer />
         </div>
 
         {/* Subtle Cross-Links */}
-        <div className="mx-auto mt-8 max-w-[1040px]">
-          <p className="text-xs text-[#556168]">
+        <div className="mx-auto mt-6 max-w-[1040px]">
+          <p className="text-xs leading-relaxed text-[#556168]">
             Working with PDF documents?{" "}
             <Link
               href="/utilities/pdf-compressor"
@@ -95,7 +122,7 @@ export default function ImageResizerPage() {
         </div>
 
         {/* Collapsed Optional Help */}
-        <div className="mt-8 sm:mt-10">
+        <div className="mt-6 sm:mt-8">
           <ImageResizerHelp />
         </div>
       </Container>

@@ -46,7 +46,7 @@ const JSON_LD = {
 
 export default function PdfSplitterPage() {
   return (
-    <div className="bg-[#F3F6F7]/65 py-6 sm:py-10">
+    <div className="bg-[#F3F6F7]/65 py-5 sm:py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
@@ -56,11 +56,11 @@ export default function PdfSplitterPage() {
         {/* Compact Title & Breadcrumb */}
         <div className="mx-auto max-w-[1040px]">
           <nav aria-label="Breadcrumb" className="text-xs font-medium">
-            <ol className="flex items-center gap-1.5 text-[#5C7E8F]">
+            <ol className="flex items-center gap-1.5 text-[#466677]">
               <li>
                 <Link
                   href="/utilities"
-                  className="rounded-sm hover:text-[#20272B] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="inline-flex min-h-[32px] items-center rounded-sm hover:text-[#20272B] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                 >
                   Utilities
                 </Link>
@@ -70,25 +70,25 @@ export default function PdfSplitterPage() {
             </ol>
           </nav>
 
-          <div className="mt-2.5 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
-            <h1 className="text-2xl font-semibold tracking-tight text-[#20272B] sm:text-[1.875rem]">
-              Split PDF files online
+          <div className="mt-1.5 space-y-1">
+            <h1 className="text-[clamp(1.5rem,1.25rem+1vw,1.875rem)] font-semibold tracking-tight text-[#20272B]">
+              Split PDF files
             </h1>
-            <p className="text-sm text-[#556168]">
-              Separate PDF pages into individual documents or extract exactly
-              the pages you need.
+            <p className="max-w-[62ch] text-sm leading-relaxed text-[#556168] text-pretty">
+              Divide a PDF by page ranges, extract exact pages, or save every
+              page separately.
             </p>
           </div>
         </div>
 
         {/* Main Application */}
-        <div className="mt-5 sm:mt-6">
+        <div className="mt-4 sm:mt-5">
           <PdfSplitter />
         </div>
 
         {/* Subtle Cross-Links */}
-        <div className="mx-auto mt-8 max-w-[1040px]">
-          <p className="text-xs text-[#556168]">
+        <div className="mx-auto mt-6 max-w-[1040px]">
+          <p className="text-xs leading-relaxed text-[#556168]">
             Need to combine documents or reduce file size?{" "}
             <Link
               href="/utilities/pdf-merger"
@@ -122,7 +122,7 @@ export default function PdfSplitterPage() {
         </div>
 
         {/* Concise Help & Reference */}
-        <div className="mt-8 sm:mt-10">
+        <div className="mt-6 sm:mt-8">
           <PdfSplitterHelp />
         </div>
       </Container>

@@ -87,7 +87,7 @@ export function ImageToPdfHelp() {
       <section aria-labelledby="how-to-convert-heading">
         <h2
           id="how-to-convert-heading"
-          className="text-sm font-medium text-[#5C7E8F]"
+          className="text-sm font-medium text-[#466677]"
         >
           How to convert images to PDF
         </h2>
@@ -100,7 +100,7 @@ export function ImageToPdfHelp() {
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#F3F6F7] font-mono text-xs font-semibold text-[#426579] tabular-nums">
                 {index + 1}
               </span>
-              <p className="mt-2.5 text-xs leading-relaxed text-[#556168]">
+              <p className="mt-2.5 text-xs leading-relaxed text-[#556168] text-pretty">
                 {step}
               </p>
             </li>
@@ -112,7 +112,7 @@ export function ImageToPdfHelp() {
       <section aria-labelledby="image-to-pdf-faq-heading">
         <h2
           id="image-to-pdf-faq-heading"
-          className="text-sm font-medium text-[#5C7E8F]"
+          className="text-sm font-medium text-[#466677]"
         >
           Frequently asked questions
         </h2>
@@ -131,7 +131,7 @@ export function ImageToPdfHelp() {
                 >
                   <span>{item.question}</span>
                   <ChevronDownIcon
-                    className={`h-4 w-4 shrink-0 text-[#5C7E8F] transition-transform duration-150 ${
+                    className={`h-4 w-4 shrink-0 text-[#466677] transition-transform duration-150 ${
                       isOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -139,7 +139,7 @@ export function ImageToPdfHelp() {
                 {isOpen ? (
                   <div
                     id={`image-to-pdf-faq-${item.id}`}
-                    className="px-5 pb-4 text-sm leading-relaxed text-[#556168]"
+                    className="max-w-[68ch] px-5 pb-4 text-sm leading-relaxed text-[#556168] text-pretty"
                   >
                     {item.answer}
                   </div>

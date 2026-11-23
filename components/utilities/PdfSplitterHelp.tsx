@@ -57,7 +57,7 @@ export function PdfSplitterHelp() {
 
   return (
     <div className="mx-auto max-w-[1040px]">
-      <h2 className="text-sm font-medium text-[#5C7E8F]">Help & reference</h2>
+      <h2 className="text-sm font-medium text-[#466677]">Help & reference</h2>
       <div className="mt-3 divide-y divide-[#D4DDE2] rounded-2xl border border-[#D4DDE2] bg-white">
         {SPLITTER_HELP_ITEMS.map((item) => {
           const isOpen = openId === item.id;
@@ -73,7 +73,7 @@ export function PdfSplitterHelp() {
               >
                 <span>{item.question}</span>
                 <ChevronDownIcon
-                  className={`h-4 w-4 shrink-0 text-[#5C7E8F] transition-transform duration-150 ${
+                  className={`h-4 w-4 shrink-0 text-[#466677] transition-transform duration-150 ${
                     isOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -81,7 +81,7 @@ export function PdfSplitterHelp() {
               {isOpen ? (
                 <div
                   id={`pdf-splitter-help-${item.id}`}
-                  className="px-5 pb-4 text-sm leading-relaxed text-[#556168]"
+                  className="max-w-[68ch] px-5 pb-4 text-sm leading-relaxed text-[#556168] text-pretty"
                 >
                   {item.answer}
                 </div>

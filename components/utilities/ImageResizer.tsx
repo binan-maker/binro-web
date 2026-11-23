@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  DEFAULT_LOSSY_QUALITY,
   MAX_DIMENSION_PX,
   formatBytes,
   inspectSelectedImage,
@@ -116,6 +117,7 @@ export function ImageResizer() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const sourcePreviewRef = useRef<string | null>(null);
   const resultPreviewRef = useRef<string | null>(null);
+  const sessionIdRef = useRef<number>(0);
 
   const [sourceImage, setSourceImage] = useState<LoadedImageInfo | null>(null);
   const [resultImage, setResultImage] = useState<ProcessedImageResult | null>(
@@ -132,6 +134,9 @@ export function ImageResizer() {
 
   const [useSizeLimit, setUseSizeLimit] = useState<boolean>(true);
   const [targetSizeInput, setTargetSizeInput] = useState<string>("50");
+  const [lossyQualityPercent, setLossyQualityPercent] = useState<number>(
+    Math.round(DEFAULT_LOSSY_QUALITY * 100)
+  );
 
   const [outputFormat, setOutputFormat] =
     useState<SupportedMimeType>("image/jpeg");
@@ -142,9 +147,11 @@ export function ImageResizer() {
   const [isInspecting, setIsInspecting] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState<string>("");
 
   useEffect(() => {
     return () => {
+      sessionIdRef.current += 1;
       if (sourcePreviewRef.current) {
         URL.revokeObjectURL(sourcePreviewRef.current);
       }
@@ -169,11 +176,18 @@ export function ImageResizer() {
   };
 
   const handleFileSelection = async (file: File) => {
+    sessionIdRef.current += 1;
+    const currentSession = sessionIdRef.current;
+
     setErrorMessage(null);
     setIsInspecting(true);
 
     try {
       const info = await inspectSelectedImage(file);
+      if (sessionIdRef.current !== currentSession) {
+        URL.revokeObjectURL(info.previewUrl);
+        return;
+      }
 
       revokeSourceUrl();
       revokeResultUrl();
@@ -186,14 +200,22 @@ export function ImageResizer() {
       setWidthInput(String(info.width));
       setHeightInput(String(info.height));
       setOutputFormat(info.mimeType);
+      setAnnouncement(
+        `Loaded ${info.name}, ${info.width} by ${info.height} pixels, ${info.formatLabel}.`
+      );
     } catch (error) {
+      if (sessionIdRef.current !== currentSession) {
+        return;
+      }
       const message =
         error instanceof Error
           ? error.message
           : "Unable to read the selected image file.";
       setErrorMessage(message);
     } finally {
-      setIsInspecting(false);
+      if (sessionIdRef.current === currentSession) {
+        setIsInspecting(false);
+      }
     }
   };
 
@@ -210,10 +232,14 @@ export function ImageResizer() {
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragging(false);
-    const file = event.dataTransfer.files?.[0];
-    if (file) {
-      void handleFileSelection(file);
+    if (isInspecting || isProcessing) return;
+    const files = event.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    if (files.length > 1) {
+      setErrorMessage("Please select one image at a time.");
+      return;
     }
+    void handleFileSelection(files[0]);
   };
 
   const handleWidthChange = (rawValue: string) => {
@@ -222,6 +248,10 @@ export function ImageResizer() {
     setIsResultCurrent(false);
 
     if (!maintainAspect || !sourceImage) return;
+    if (rawValue.trim() === "") {
+      setHeightInput("");
+      return;
+    }
     const parsed = Number(rawValue);
     if (Number.isFinite(parsed) && parsed > 0) {
       const aspectRatio = sourceImage.width / sourceImage.height;
@@ -235,6 +265,10 @@ export function ImageResizer() {
     setIsResultCurrent(false);
 
     if (!maintainAspect || !sourceImage) return;
+    if (rawValue.trim() === "") {
+      setWidthInput("");
+      return;
+    }
     const parsed = Number(rawValue);
     if (Number.isFinite(parsed) && parsed > 0) {
       const aspectRatio = sourceImage.width / sourceImage.height;
@@ -254,39 +288,61 @@ export function ImageResizer() {
     }
   };
 
+  const handleRestoreOriginalDimensions = () => {
+    if (!sourceImage) return;
+    setWidthInput(String(sourceImage.width));
+    setHeightInput(String(sourceImage.height));
+    setErrorMessage(null);
+    setIsResultCurrent(false);
+  };
+
   const handleRemoveImage = () => {
+    sessionIdRef.current += 1;
     revokeSourceUrl();
     revokeResultUrl();
     setSourceImage(null);
     setResultImage(null);
     setIsResultCurrent(false);
+    setIsInspecting(false);
+    setIsProcessing(false);
     setWidthInput("");
     setHeightInput("");
     setErrorMessage(null);
+    setAnnouncement("Removed selected image.");
   };
 
   const handleReset = () => {
+    sessionIdRef.current += 1;
     revokeSourceUrl();
     revokeResultUrl();
     setSourceImage(null);
     setResultImage(null);
     setIsResultCurrent(false);
+    setIsInspecting(false);
+    setIsProcessing(false);
     setPreviewMode("result");
     setWidthInput("");
     setHeightInput("");
     setMaintainAspect(true);
     setUseSizeLimit(true);
     setTargetSizeInput("50");
+    setLossyQualityPercent(Math.round(DEFAULT_LOSSY_QUALITY * 100));
     setOutputFormat("image/jpeg");
     setJpegBackground("#FFFFFF");
     setShowAdvanced(false);
     setErrorMessage(null);
+    setAnnouncement("Reset image resizer.");
   };
 
   const handleProcessImage = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!sourceImage) {
       setErrorMessage("Please choose an image before resizing.");
+      return;
+    }
+
+    if (widthInput.trim() === "" || heightInput.trim() === "") {
+      setErrorMessage("Enter both width and height in pixels.");
       return;
     }
 
@@ -300,7 +356,7 @@ export function ImageResizer() {
     }
 
     let targetSizeKb: number | null = null;
-    if (useSizeLimit) {
+    if (useSizeLimit && outputFormat !== "image/png") {
       const parsedTarget = Number(targetSizeInput);
       if (!Number.isFinite(parsedTarget) || parsedTarget < 1) {
         setErrorMessage(
@@ -311,6 +367,7 @@ export function ImageResizer() {
       targetSizeKb = parsedTarget;
     }
 
+    const currentSession = sessionIdRef.current;
     setErrorMessage(null);
     setIsProcessing(true);
 
@@ -320,22 +377,39 @@ export function ImageResizer() {
         targetHeight: parsedHeight,
         outputFormat,
         targetSizeKb,
+        lossyQuality:
+          outputFormat !== "image/png" && targetSizeKb === null
+            ? lossyQualityPercent / 100
+            : null,
         jpegBackgroundColor: jpegBackground,
       });
+
+      if (sessionIdRef.current !== currentSession) {
+        URL.revokeObjectURL(processed.previewUrl);
+        return;
+      }
 
       revokeResultUrl();
       resultPreviewRef.current = processed.previewUrl;
       setResultImage(processed);
       setIsResultCurrent(true);
       setPreviewMode("result");
+      setAnnouncement(
+        `Resized image ready: ${processed.outputWidth} by ${processed.outputHeight} pixels, ${formatBytes(processed.outputSizeBytes)}.`
+      );
     } catch (error) {
+      if (sessionIdRef.current !== currentSession) {
+        return;
+      }
       const message =
         error instanceof Error
           ? error.message
           : "Unable to process this image.";
       setErrorMessage(message);
     } finally {
-      setIsProcessing(false);
+      if (sessionIdRef.current === currentSession) {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -354,7 +428,11 @@ export function ImageResizer() {
     outputFormat === "image/jpeg" &&
     (sourceImage.hasTransparency || sourceImage.mimeType !== "image/jpeg");
 
-  const showPngNote = outputFormat === "image/png" && useSizeLimit;
+  const dimensionsChangedFromOriginal =
+    sourceImage !== null &&
+    (Number(widthInput) !== sourceImage.width ||
+      Number(heightInput) !== sourceImage.height);
+
   const showingResultPreview = Boolean(resultImage && previewMode === "result");
 
   return (
@@ -368,12 +446,23 @@ export function ImageResizer() {
         className="sr-only"
       />
 
+      <div className="sr-only" aria-live="polite" role="status">
+        {announcement}
+      </div>
+
       {errorMessage ? (
         <div
           role="alert"
-          className="rounded-xl border border-[#B44A4A]/40 bg-[#FDF5F5] px-4 py-3 text-sm text-[#7A2727]"
+          className="flex flex-col gap-3 rounded-xl border border-[#B44A4A]/40 bg-[#FDF5F5] px-4 py-3 text-sm text-[#7A2727] sm:flex-row sm:items-center sm:justify-between"
         >
-          {errorMessage}
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="inline-flex min-h-[36px] shrink-0 items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+          >
+            Dismiss
+          </button>
         </div>
       ) : null}
 
@@ -390,16 +479,16 @@ export function ImageResizer() {
             }
           }}
           onDrop={handleDrop}
-          className="rounded-2xl border border-[#D4DDE2] bg-white p-4 sm:p-6 shadow-[0_1px_2px_rgba(32,39,43,0.03)]"
+          className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
         >
           <div
-            className={`flex min-h-[290px] sm:min-h-[340px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center transition-colors duration-150 ${
+            className={`flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-150 sm:min-h-[300px] sm:py-12 ${
               isDragging
                 ? "border-[#426579] bg-[#F3F6F7]"
                 : "border-[#D4DDE2] bg-[#F3F6F7]/50 hover:border-[#5C7E8F]"
             }`}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#5C7E8F]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#466677]">
               <UploadImageIcon className="h-6 w-6" />
             </div>
 
@@ -412,19 +501,19 @@ export function ImageResizer() {
               {isInspecting ? "Reading image..." : "Choose an image"}
             </button>
 
-            <p className="mt-3 text-sm text-[#4A555C]">or drop it here</p>
-            <p className="mt-4 text-xs text-[#5C7E8F]">
-              Supported formats: JPG, PNG, WebP
+            <p className="mt-3 text-sm text-[#556168]">or drop it here</p>
+            <p className="mt-4 text-xs text-[#466677]">
+              Supported formats: JPG, PNG, WebP (up to 50 MB)
             </p>
           </div>
         </div>
       ) : (
         /* Balanced Preview + Settings Workspace */
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:items-start lg:gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
           {/* Preview & Result Stage */}
           <section
             aria-label="Image preview"
-            className="rounded-2xl border border-[#D4DDE2] bg-white p-4 sm:p-5 md:col-span-7 shadow-[0_1px_2px_rgba(32,39,43,0.03)]"
+            className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-5 lg:col-span-7"
           >
             {/* Preview Top Controls */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5">
@@ -438,7 +527,7 @@ export function ImageResizer() {
                     type="button"
                     aria-pressed={previewMode === "result"}
                     onClick={() => setPreviewMode("result")}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                    className={`min-h-[34px] rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                       previewMode === "result"
                         ? "bg-white text-[#20272B] shadow-xs"
                         : "text-[#4A555C] hover:text-[#20272B]"
@@ -450,7 +539,7 @@ export function ImageResizer() {
                     type="button"
                     aria-pressed={previewMode === "original"}
                     onClick={() => setPreviewMode("original")}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                    className={`min-h-[34px] rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                       previewMode === "original"
                         ? "bg-white text-[#20272B] shadow-xs"
                         : "text-[#4A555C] hover:text-[#20272B]"
@@ -460,23 +549,28 @@ export function ImageResizer() {
                   </button>
                 </div>
               ) : (
-                <p className="truncate max-w-[180px] sm:max-w-[280px] text-xs font-medium text-[#4A555C]">
+                <p
+                  title={sourceImage.name}
+                  className="min-w-0 flex-1 truncate text-xs font-medium text-[#556168]"
+                >
                   {sourceImage.name}
                 </p>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <button
                   type="button"
+                  disabled={isInspecting || isProcessing}
                   onClick={() => fileInputRef.current?.click()}
-                  className="min-h-[36px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="min-h-[44px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   Replace
                 </button>
                 <button
                   type="button"
+                  disabled={isProcessing}
                   onClick={handleRemoveImage}
-                  className="min-h-[36px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#4A555C] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="min-h-[44px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   Remove
                 </button>
@@ -484,7 +578,7 @@ export function ImageResizer() {
             </div>
 
             {/* Aspect-Preserving Image Viewport */}
-            <div className="flex min-h-[220px] sm:min-h-[300px] items-center justify-center overflow-hidden rounded-xl border border-[#D4DDE2]/80 bg-[#F3F6F7] p-3 sm:p-5">
+            <div className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-xl border border-[#D4DDE2]/80 bg-[#F3F6F7] p-3 sm:min-h-[300px] sm:p-5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={
@@ -497,34 +591,56 @@ export function ImageResizer() {
                     ? `Processed image preview (${resultImage.outputWidth} by ${resultImage.outputHeight} ${resultImage.outputFormatLabel})`
                     : `Original preview of ${sourceImage.name}`
                 }
-                className="max-h-[300px] sm:max-h-[360px] lg:max-h-[400px] w-auto max-w-full object-contain"
+                className="max-h-[300px] w-auto max-w-full object-contain sm:max-h-[360px] lg:max-h-[400px]"
               />
             </div>
 
             {/* Metadata or Result Metrics */}
             {showingResultPreview && resultImage ? (
               <div aria-live="polite" className="mt-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="inline-flex items-center gap-2">
+                    {isResultCurrent ? (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[#EAFBF6] text-[#0E6B56]">
+                        <CheckIcon className="h-3.5 w-3.5" />
+                      </span>
+                    ) : null}
+                    <p
+                      className={`text-xs font-semibold uppercase tracking-[0.06em] ${
+                        isResultCurrent ? "text-[#0E6B56]" : "text-[#466677]"
+                      }`}
+                    >
+                      {isResultCurrent
+                        ? "Resized image ready"
+                        : "Previous result"}
+                    </p>
+                  </div>
+                  <span className="font-mono text-xs text-[#466677]">
+                    {resultImage.outputFormatLabel}
+                  </span>
+                </div>
+
                 <dl className="grid grid-cols-2 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs sm:grid-cols-4">
                   <div>
-                    <dt className="text-[#5C7E8F]">Dimensions</dt>
+                    <dt className="text-[#466677]">Dimensions</dt>
                     <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                       {resultImage.outputWidth} × {resultImage.outputHeight}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[#5C7E8F]">File size</dt>
+                    <dt className="text-[#466677]">File size</dt>
                     <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                       {formatBytes(resultImage.outputSizeBytes)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[#5C7E8F]">Original size</dt>
+                    <dt className="text-[#466677]">Original size</dt>
                     <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                       {formatBytes(resultImage.originalSizeBytes)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[#5C7E8F]">Space saved</dt>
+                    <dt className="text-[#466677]">Space saved</dt>
                     <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                       {resultImage.bytesSaved > 0
                         ? `${formatBytes(resultImage.bytesSaved)} (${resultImage.percentReduction}%)`
@@ -532,6 +648,16 @@ export function ImageResizer() {
                     </dd>
                   </div>
                 </dl>
+
+                <p className="truncate text-xs text-[#556168]">
+                  Output:{" "}
+                  <span
+                    title={resultImage.filename}
+                    className="font-mono text-[#20272B]"
+                  >
+                    {resultImage.filename}
+                  </span>
+                </p>
 
                 {resultImage.targetSizeKb !== null && !resultImage.targetMet ? (
                   <p className="rounded-lg border border-[#B47A3C]/40 bg-[#FDF9F3] px-3.5 py-2.5 text-xs leading-relaxed text-[#5D3D1A]">
@@ -553,19 +679,19 @@ export function ImageResizer() {
             ) : (
               <dl className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs sm:grid-cols-3">
                 <div>
-                  <dt className="text-[#5C7E8F]">Dimensions</dt>
+                  <dt className="text-[#466677]">Dimensions</dt>
                   <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                     {sourceImage.width} × {sourceImage.height}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[#5C7E8F]">File size</dt>
+                  <dt className="text-[#466677]">File size</dt>
                   <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                     {formatBytes(sourceImage.sizeBytes)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[#5C7E8F]">Format</dt>
+                  <dt className="text-[#466677]">Format</dt>
                   <dd className="mt-0.5 font-medium text-[#20272B]">
                     {sourceImage.formatLabel}
                   </dd>
@@ -577,7 +703,7 @@ export function ImageResizer() {
           {/* Compact Settings Panel */}
           <form
             onSubmit={handleProcessImage}
-            className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 sm:p-6 md:col-span-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)]"
+            className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-5"
           >
             {/* Dimensions */}
             <div className="space-y-3">
@@ -621,19 +747,70 @@ export function ImageResizer() {
                 </div>
               </div>
 
-              <label className="inline-flex min-h-[36px] cursor-pointer items-center gap-2.5 text-sm text-[#20272B]">
-                <input
-                  type="checkbox"
-                  checked={maintainAspect}
-                  onChange={(event) => handleAspectToggle(event.target.checked)}
-                  className="h-4 w-4 rounded border-[#D4DDE2] accent-[#426579] focus:ring-[#5C7E8F]"
-                />
-                <span>Maintain aspect ratio</span>
-              </label>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="inline-flex min-h-[36px] cursor-pointer items-center gap-2.5 text-sm text-[#20272B]">
+                  <input
+                    type="checkbox"
+                    checked={maintainAspect}
+                    onChange={(event) =>
+                      handleAspectToggle(event.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-[#D4DDE2] accent-[#426579] focus:ring-[#5C7E8F]"
+                  />
+                  <span>Maintain aspect ratio</span>
+                </label>
+
+                {dimensionsChangedFromOriginal ? (
+                  <button
+                    type="button"
+                    onClick={handleRestoreOriginalDimensions}
+                    className="min-h-[40px] rounded-md px-2.5 text-xs font-medium text-[#426579] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[36px]"
+                  >
+                    Use original ({sourceImage.width} × {sourceImage.height})
+                  </button>
+                ) : null}
+              </div>
             </div>
 
-            {/* File Size Target */}
-            {useSizeLimit ? (
+            {/* File Size Target OR Quality Slider */}
+            {outputFormat === "image/png" ? (
+              useSizeLimit ? (
+                <div className="space-y-2.5 border-t border-[#D4DDE2]/80 pt-5">
+                  <div className="rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/75 p-3.5 text-xs leading-relaxed text-[#4A555C]">
+                    <p className="font-medium text-[#20272B]">
+                      PNG keeps lossless quality
+                    </p>
+                    <p className="mt-1">
+                      PNG files do not support KB quality limits. Reduce pixel
+                      dimensions above, or switch to JPG or WebP to hit a
+                      specific KB target.
+                    </p>
+                    <div className="mt-2.5 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOutputFormat("image/jpeg");
+                          setIsResultCurrent(false);
+                        }}
+                        className="min-h-[40px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1 font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[36px]"
+                      >
+                        Switch to JPG
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOutputFormat("image/webp");
+                          setIsResultCurrent(false);
+                        }}
+                        className="min-h-[40px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1 font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[36px]"
+                      >
+                        Switch to WebP
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : null
+            ) : useSizeLimit ? (
               <div className="space-y-2.5 border-t border-[#D4DDE2]/80 pt-5">
                 <label
                   htmlFor="target-size-kb"
@@ -665,7 +842,7 @@ export function ImageResizer() {
                           setTargetSizeInput(String(preset));
                           setIsResultCurrent(false);
                         }}
-                        className={`min-h-[34px] rounded-lg px-2.5 py-1 font-mono text-xs font-medium tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                        className={`min-h-[36px] rounded-lg px-2.5 py-1 font-mono text-xs font-medium tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                           isSelected
                             ? "bg-[#426579] text-white"
                             : "bg-[#F3F6F7] text-[#20272B] hover:bg-[#D4DDE2]/70"
@@ -677,7 +854,40 @@ export function ImageResizer() {
                   })}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="space-y-2 border-t border-[#D4DDE2]/80 pt-5">
+                <div className="flex items-center justify-between text-xs">
+                  <label
+                    htmlFor="lossy-quality-range"
+                    className="font-medium text-[#4A555C]"
+                  >
+                    {outputFormat === "image/webp"
+                      ? "WebP quality"
+                      : "JPEG quality"}
+                  </label>
+                  <span className="font-mono font-medium text-[#20272B] tabular-nums">
+                    {lossyQualityPercent}%
+                  </span>
+                </div>
+                <input
+                  id="lossy-quality-range"
+                  type="range"
+                  min={20}
+                  max={96}
+                  step={2}
+                  value={lossyQualityPercent}
+                  onChange={(event) => {
+                    setLossyQualityPercent(Number(event.target.value));
+                    setIsResultCurrent(false);
+                  }}
+                  className="h-2 w-full cursor-pointer accent-[#426579]"
+                />
+                <p className="text-xs text-[#466677]">
+                  Higher quality keeps finer detail; lower quality produces
+                  smaller files.
+                </p>
+              </div>
+            )}
 
             {/* Output Format Segmented Control */}
             <div className="space-y-2.5 border-t border-[#D4DDE2]/80 pt-5">
@@ -704,7 +914,7 @@ export function ImageResizer() {
                         setIsResultCurrent(false);
                       }}
                       aria-pressed={isSelected}
-                      className={`min-h-[38px] rounded-lg text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                      className={`min-h-[40px] rounded-lg text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                         isSelected
                           ? "bg-white text-[#20272B] shadow-xs"
                           : "text-[#4A555C] hover:text-[#20272B]"
@@ -716,14 +926,8 @@ export function ImageResizer() {
                 })}
               </div>
 
-              {showPngNote ? (
-                <p className="text-xs text-[#5C7E8F]">
-                  PNG is lossless. Switch to JPG or WebP for smaller KB sizes.
-                </p>
-              ) : null}
-
               {showTransparencyNotice ? (
-                <p className="text-xs text-[#5C7E8F]">
+                <p className="text-xs text-[#466677]">
                   JPEG replaces transparency with{" "}
                   <span className="font-mono">{jpegBackground}</span> (change in
                   Advanced settings).
@@ -732,13 +936,13 @@ export function ImageResizer() {
             </div>
 
             {/* Progressive Disclosure: Advanced Settings (collapsed by default) */}
-            <div className="border-t border-[#D4DDE2]/80 pt-4">
+            <div className="border-t border-[#D4DDE2]/80 pt-3">
               <button
                 type="button"
                 aria-expanded={showAdvanced}
                 aria-controls="advanced-settings-panel"
                 onClick={() => setShowAdvanced((prev) => !prev)}
-                className="flex w-full items-center justify-between py-1 text-xs font-medium text-[#4A555C] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] rounded-sm"
+                className="flex min-h-[44px] w-full items-center justify-between rounded-lg py-1.5 text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
               >
                 <span>Advanced settings</span>
                 <ChevronDownIcon
@@ -780,7 +984,7 @@ export function ImageResizer() {
                               setJpegBackground(option.value);
                               setIsResultCurrent(false);
                             }}
-                            className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors ${
+                            className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
                               jpegBackground.toUpperCase() === option.value
                                 ? "border-[#426579] bg-white font-medium text-[#20272B]"
                                 : "border-[#D4DDE2] bg-white/70 text-[#4A555C] hover:border-[#5C7E8F]"
@@ -830,14 +1034,14 @@ export function ImageResizer() {
                     <button
                       type="submit"
                       disabled={isProcessing}
-                      className="min-h-[40px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2 text-xs font-medium text-[#20272B] transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                      className="min-h-[42px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2 text-xs font-medium text-[#20272B] transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                     >
-                      {isProcessing ? "Resizing..." : "Resize image"}
+                      {isProcessing ? "Resizing..." : "Resize again"}
                     </button>
                     <button
                       type="button"
                       onClick={handleReset}
-                      className="min-h-[40px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2 text-xs font-medium text-[#4A555C] transition-colors duration-150 hover:border-[#5C7E8F] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                      className="min-h-[42px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2 text-xs font-medium text-[#4A555C] transition-colors duration-150 hover:border-[#5C7E8F] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                     >
                       Reset
                     </button>
@@ -868,8 +1072,8 @@ export function ImageResizer() {
 
       {/* Quiet Privacy & Offline Status Bar */}
       <div className="flex flex-col items-start justify-between gap-2 pt-1 sm:flex-row sm:items-center">
-        <p className="inline-flex items-center gap-2 text-xs text-[#4A555C]">
-          <LockIcon className="h-3.5 w-3.5 text-[#5C7E8F]" />
+        <p className="inline-flex items-center gap-2 text-xs text-[#556168]">
+          <LockIcon className="h-3.5 w-3.5 shrink-0 text-[#466677]" />
           <span>Your images stay on your device.</span>
         </p>
         <OfflineServiceWorker />

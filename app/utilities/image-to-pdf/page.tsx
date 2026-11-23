@@ -46,7 +46,7 @@ const JSON_LD = {
 
 export default function ImageToPdfPage() {
   return (
-    <div className="bg-[#F3F6F7]/65 py-6 sm:py-10">
+    <div className="bg-[#F3F6F7]/65 py-5 sm:py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
@@ -56,11 +56,11 @@ export default function ImageToPdfPage() {
         {/* Compact Title & Breadcrumb */}
         <div className="mx-auto max-w-[1040px]">
           <nav aria-label="Breadcrumb" className="text-xs font-medium">
-            <ol className="flex items-center gap-1.5 text-[#5C7E8F]">
+            <ol className="flex items-center gap-1.5 text-[#466677]">
               <li>
                 <Link
                   href="/utilities"
-                  className="rounded-sm hover:text-[#20272B] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="inline-flex min-h-[32px] items-center rounded-sm hover:text-[#20272B] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                 >
                   Utilities
                 </Link>
@@ -70,24 +70,24 @@ export default function ImageToPdfPage() {
             </ol>
           </nav>
 
-          <div className="mt-2.5 space-y-1.5">
-            <h1 className="text-2xl font-semibold tracking-tight text-[#20272B] sm:text-[1.875rem]">
+          <div className="mt-1.5 space-y-1">
+            <h1 className="text-[clamp(1.5rem,1.25rem+1vw,1.875rem)] font-semibold tracking-tight text-[#20272B]">
               Convert images to PDF
             </h1>
-            <p className="max-w-2xl text-sm text-[#556168]">
-              Turn your images into a single PDF document. Arrange your images,
-              customize the page layout and download your PDF in seconds.
+            <p className="max-w-[62ch] text-sm leading-relaxed text-[#556168] text-pretty">
+              Arrange images, choose page layout, and save one PDF document on
+              your device.
             </p>
           </div>
         </div>
 
         {/* Main Application */}
-        <div className="mt-5 sm:mt-6">
+        <div className="mt-4 sm:mt-5">
           <ImageToPdf />
         </div>
 
         {/* Cross-Links to Sibling Tools */}
-        <div className="mx-auto mt-8 max-w-[1040px]">
+        <div className="mx-auto mt-6 max-w-[1040px]">
           <p className="text-xs leading-relaxed text-[#556168]">
             Need to adjust images or manage finished PDFs?{" "}
             <Link
@@ -122,7 +122,7 @@ export default function ImageToPdfPage() {
         </div>
 
         {/* How-To & FAQ */}
-        <div className="mt-8 sm:mt-10">
+        <div className="mt-6 sm:mt-8">
           <ImageToPdfHelp />
         </div>
       </Container>

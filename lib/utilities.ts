@@ -127,7 +127,7 @@ export const UTILITY_TOOLS: UtilityTool[] = [
     id: "pdf-merger",
     name: "BinRo PDF Merger",
     shortTitle: "PDF Merger",
-    shortDescription: "Combine multiple PDF files into one document.",
+    shortDescription: "Combine multiple PDFs into one file.",
     description:
       "Combine multiple PDF files into one document, in the order you choose, directly in your browser.",
     categoryId: "pdf-document-tools",
@@ -148,8 +148,7 @@ export const UTILITY_TOOLS: UtilityTool[] = [
     id: "pdf-splitter",
     name: "BinRo PDF Splitter",
     shortTitle: "PDF Splitter",
-    shortDescription:
-      "Split a PDF into separate files or extract selected pages.",
+    shortDescription: "Split a PDF or extract pages.",
     description:
       "Separate PDF pages into individual documents or extract exactly the pages you need, directly in your browser.",
     categoryId: "pdf-document-tools",
@@ -171,7 +170,7 @@ export const UTILITY_TOOLS: UtilityTool[] = [
     id: "image-to-pdf",
     name: "BinRo Image to PDF",
     shortTitle: "Image to PDF",
-    shortDescription: "Convert multiple images into one PDF document.",
+    shortDescription: "Convert images into one PDF.",
     description:
       "Turn JPG, PNG, WebP, BMP, and GIF images into a single PDF document. Arrange images, customize page layout, and download in your browser.",
     categoryId: "pdf-document-tools",

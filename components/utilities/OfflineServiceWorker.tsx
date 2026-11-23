@@ -221,14 +221,14 @@ export function OfflineServiceWorker() {
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[#4A555C]"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[#556168]"
     >
-      <span className="font-medium text-[#5C7E8F]">{statusLabel}</span>
+      <span className="font-medium text-[#466677]">{statusLabel}</span>
       {!isInstalled && deferredPrompt ? (
         <button
           type="button"
           onClick={handleInstall}
-          className="inline-flex items-center rounded-md border border-[#D4DDE2] bg-white px-2.5 py-1 text-xs font-medium text-[#20272B] whitespace-nowrap shrink-0 transition-colors duration-150 hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+          className="inline-flex min-h-[38px] items-center rounded-md border border-[#D4DDE2] bg-white px-3 py-1 text-xs font-medium text-[#20272B] transition-colors duration-150 hover:border-[#5C7E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[34px]"
         >
           Install app
         </button>

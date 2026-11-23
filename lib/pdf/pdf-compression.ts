@@ -90,6 +90,7 @@ const TARGET_PASSES: CompressionPass[] = [
   { maxImageEdge: 1250, jpegQuality: 0.6 },
   { maxImageEdge: 1050, jpegQuality: 0.48 },
   { maxImageEdge: 880, jpegQuality: 0.38 },
+  { maxImageEdge: 680, jpegQuality: 0.32 },
 ];
 
 export function formatPdfBytes(bytes: number): string {
@@ -674,7 +675,7 @@ async function runSingleCompressionPass(
         imageEntries.push({ ref, stream: obj, meta });
       }
     } else if (
-      !obj.dict.lookup(PDFName.of("Filter")) &&
+      !getSingleFilterName(obj.dict) &&
       obj.dict.lookup(PDFName.of("Type")) !== PDFName.of("Metadata") &&
       obj.contents.length > 160
     ) {
@@ -968,6 +969,10 @@ export async function compressPdfBytes(
   const bytesSaved = originalSizeBytes - outputSizeBytes;
 
   if (bytesSaved <= 0) {
+    const alreadyOptNote =
+      inspection.optimizableImageCount === 0
+        ? "This PDF contains mostly text, vector graphics, or already-compressed streams. Rewriting it would not make it smaller, so your original file was kept."
+        : "The images and streams in this PDF are already as compact as safe optimisation allows without hurting readability, so your original file was kept.";
     return {
       compressedBytes: null,
       originalSizeBytes,
@@ -981,7 +986,7 @@ export async function compressPdfBytes(
       targetMet: targetBytes !== null ? originalSizeBytes <= targetBytes : false,
       alreadyOptimized: true,
       hasDigitalSignature: inspection.hasDigitalSignature,
-      note: "This PDF is already optimised. Saving a rewritten copy did not reduce its size, so your original file was kept.",
+      note: alreadyOptNote,
     };
   }
 

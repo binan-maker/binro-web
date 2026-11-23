@@ -19,20 +19,20 @@ export function DivisionAreas({
       {categories.map((category, index) => (
         <article
           key={category.title}
-          className="border-t border-[#D4DDE2] pt-5"
+          className="border-t border-[#D4DDE2] pt-4 sm:pt-5"
         >
           <div className="flex items-center justify-between gap-4 text-xs">
-            <span className="font-medium text-[#5C7E8F]">
+            <span className="font-medium text-[#466677]">
               {category.group ?? "Future area"}
             </span>
-            <span className="font-mono text-[#A2A2A2] tabular-nums">
+            <span className="font-mono font-medium text-[#556168] tabular-nums">
               {String(index + 1).padStart(2, "0")}
             </span>
           </div>
-          <h3 className="mt-2.5 text-base font-semibold tracking-tight text-[#20272B] sm:text-lg">
+          <h3 className="mt-2 text-base font-semibold tracking-tight text-[#20272B] sm:text-lg">
             {category.title}
           </h3>
-          <p className="mt-2 text-sm leading-relaxed text-[#556168]">
+          <p className="mt-1.5 max-w-[56ch] text-sm leading-relaxed text-[#556168] text-pretty">
             {category.description}
           </p>
         </article>

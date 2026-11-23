@@ -44,38 +44,38 @@ export default function BusinessPage() {
         note="In planning — no public products launched yet."
       />
 
-      <section className="bg-white py-14 sm:py-20">
+      <section className="bg-white py-12 sm:py-16">
         <Container>
           <SectionHeading
             kicker="Planned product areas"
             title="Software areas we aim to build."
           />
 
-          <div className="mt-10">
+          <div className="mt-8">
             <DivisionAreas categories={division.categories} columns={2} />
           </div>
         </Container>
       </section>
 
-      <section className="border-t border-[#D4DDE2] bg-white py-14 sm:py-16">
+      <section className="border-t border-[#D4DDE2] bg-white py-12 sm:py-14">
         <Container>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             <div className="lg:col-span-4">
-              <p className="text-xs font-medium uppercase tracking-[0.06em] text-[#5C7E8F]">
+              <p className="text-xs font-medium tracking-[0.04em] text-[#466677]">
                 Approach
               </p>
-              <h2 className="mt-2 text-xl font-semibold tracking-tight text-[#20272B] sm:text-2xl">
+              <h2 className="mt-1.5 text-xl font-semibold tracking-tight text-[#20272B] sm:text-2xl">
                 Clarity over bloat.
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 lg:col-span-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 lg:col-span-8">
               {BUSINESS_PRINCIPLES.map((item) => (
                 <div key={item.title}>
                   <h3 className="text-sm font-semibold text-[#20272B]">
                     {item.title}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[#556168]">
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#556168] text-pretty">
                     {item.detail}
                   </p>
                 </div>

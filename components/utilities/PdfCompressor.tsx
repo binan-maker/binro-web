@@ -150,6 +150,7 @@ export function PdfCompressor() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const downloadUrlRef = useRef<string | null>(null);
   const activeCancelRef = useRef<(() => void) | null>(null);
+  const sessionIdRef = useRef<number>(0);
 
   const [loadedPdf, setLoadedPdf] = useState<LoadedPdfState | null>(null);
   const [resultState, setResultState] = useState<PdfResultState | null>(null);
@@ -170,6 +171,7 @@ export function PdfCompressor() {
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [progress, setProgress] = useState<CompressionProgress | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState<string>("");
 
   const revokeDownloadUrl = () => {
     if (downloadUrlRef.current) {
@@ -180,6 +182,7 @@ export function PdfCompressor() {
 
   useEffect(() => {
     return () => {
+      sessionIdRef.current += 1;
       activeCancelRef.current?.();
       activeCancelRef.current = null;
       if (downloadUrlRef.current) {
@@ -205,27 +208,42 @@ export function PdfCompressor() {
       return;
     }
 
+    sessionIdRef.current += 1;
+    const currentSession = sessionIdRef.current;
+
     activeCancelRef.current?.();
     activeCancelRef.current = null;
     revokeDownloadUrl();
     setErrorMessage(null);
     setResultState(null);
     setIsResultCurrent(false);
+    setIsCompressing(false);
     setProgress(null);
     setIsInspecting(true);
 
     try {
       const inspection = await inspectPdfFileInBrowser(file);
+      if (sessionIdRef.current !== currentSession) {
+        return;
+      }
       setLoadedPdf({
         file,
         name: file.name,
         sizeBytes: file.size,
         inspection,
       });
+      setAnnouncement(
+        `Loaded ${file.name}, ${inspection.pageCount} ${inspection.pageCount === 1 ? "page" : "pages"}, ${formatPdfBytes(file.size)}.`
+      );
     } catch (error) {
+      if (sessionIdRef.current !== currentSession) {
+        return;
+      }
       setErrorMessage(translatePdfError(error));
     } finally {
-      setIsInspecting(false);
+      if (sessionIdRef.current === currentSession) {
+        setIsInspecting(false);
+      }
     }
   };
 
@@ -242,25 +260,33 @@ export function PdfCompressor() {
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragging(false);
-    const file = event.dataTransfer.files?.[0];
-    if (file) {
-      void handleFileSelection(file);
+    if (isInspecting || isCompressing) return;
+    const files = event.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    if (files.length > 1) {
+      setErrorMessage("Please select one PDF document at a time.");
+      return;
     }
+    void handleFileSelection(files[0]);
   };
 
   const handleRemoveFile = () => {
+    sessionIdRef.current += 1;
     activeCancelRef.current?.();
     activeCancelRef.current = null;
     revokeDownloadUrl();
     setLoadedPdf(null);
     setResultState(null);
     setIsResultCurrent(false);
+    setIsInspecting(false);
     setIsCompressing(false);
     setProgress(null);
     setErrorMessage(null);
+    setAnnouncement("Removed selected PDF.");
   };
 
   const handleReset = () => {
+    sessionIdRef.current += 1;
     activeCancelRef.current?.();
     activeCancelRef.current = null;
     revokeDownloadUrl();
@@ -273,9 +299,11 @@ export function PdfCompressor() {
     setStripMetadataAndThumbs(true);
     setPreserveImageResolution(false);
     setShowAdvanced(false);
+    setIsInspecting(false);
     setIsCompressing(false);
     setProgress(null);
     setErrorMessage(null);
+    setAnnouncement("Reset PDF compressor.");
   };
 
   const handleCancelCompression = () => {
@@ -283,6 +311,7 @@ export function PdfCompressor() {
     activeCancelRef.current = null;
     setIsCompressing(false);
     setProgress(null);
+    setAnnouncement("PDF compression cancelled.");
   };
 
   const runCompression = async (overrideTarget?: {
@@ -332,6 +361,7 @@ export function PdfCompressor() {
       setTargetUnit(overrideTarget.unit);
     }
 
+    const currentSession = sessionIdRef.current;
     setErrorMessage(null);
     setIsCompressing(true);
     setProgress({
@@ -348,13 +378,20 @@ export function PdfCompressor() {
         stripMetadataAndThumbs,
         preserveImageResolution,
       },
-      (p) => setProgress(p)
+      (p) => {
+        if (sessionIdRef.current === currentSession) {
+          setProgress(p);
+        }
+      }
     );
 
     activeCancelRef.current = job.cancel;
 
     try {
       const output = await job.promise;
+      if (sessionIdRef.current !== currentSession) {
+        return;
+      }
       activeCancelRef.current = null;
 
       revokeDownloadUrl();
@@ -373,7 +410,15 @@ export function PdfCompressor() {
         filename: buildCompressedPdfFilename(loadedPdf.name),
       });
       setIsResultCurrent(true);
+      setAnnouncement(
+        output.alreadyOptimized
+          ? "PDF is already optimised. Original file preserved."
+          : `Compressed PDF ready: ${formatPdfBytes(output.outputSizeBytes)}, reduced by ${output.percentReduction}%.`
+      );
     } catch (error) {
+      if (sessionIdRef.current !== currentSession) {
+        return;
+      }
       activeCancelRef.current = null;
       if (
         error instanceof Error &&
@@ -383,8 +428,10 @@ export function PdfCompressor() {
       }
       setErrorMessage(translatePdfError(error));
     } finally {
-      setIsCompressing(false);
-      setProgress(null);
+      if (sessionIdRef.current === currentSession) {
+        setIsCompressing(false);
+        setProgress(null);
+      }
     }
   };
 
@@ -428,21 +475,34 @@ export function PdfCompressor() {
         className="sr-only"
       />
 
+      <div className="sr-only" aria-live="polite" role="status">
+        {announcement}
+      </div>
+
       {errorMessage ? (
         <div
           role="alert"
           className="flex flex-col gap-3 rounded-xl border border-[#B44A4A]/40 bg-[#FDF5F5] px-4 py-3 text-sm text-[#7A2727] sm:flex-row sm:items-center sm:justify-between"
         >
           <span>{errorMessage}</span>
-          {loadedPdf && !isCompressing ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {loadedPdf && !isCompressing ? (
+              <button
+                type="button"
+                onClick={() => void runCompression()}
+                className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1.5 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+              >
+                Try again
+              </button>
+            ) : null}
             <button
               type="button"
-              onClick={() => void runCompression()}
-              className="inline-flex min-h-[36px] shrink-0 items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1.5 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+              onClick={() => setErrorMessage(null)}
+              className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1.5 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
             >
-              Try again
+              Dismiss
             </button>
-          ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -462,13 +522,13 @@ export function PdfCompressor() {
           className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
         >
           <div
-            className={`flex min-h-[280px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center transition-colors duration-150 sm:min-h-[320px] ${
+            className={`flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-150 sm:min-h-[300px] sm:py-12 ${
               isDragging
                 ? "border-[#426579] bg-[#F3F6F7]"
                 : "border-[#D4DDE2] bg-[#F3F6F7]/50 hover:border-[#5C7E8F]"
             }`}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#5C7E8F]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#466677]">
               <PdfDocumentIcon className="h-6 w-6" />
             </div>
 
@@ -482,7 +542,7 @@ export function PdfCompressor() {
             </button>
 
             <p className="mt-3 text-sm text-[#556168]">or drop it here</p>
-            <p className="mt-4 text-xs text-[#5C7E8F]">
+            <p className="mt-4 text-xs text-[#466677]">
               PDF documents up to{" "}
               {Math.round(MAX_PDF_INPUT_BYTES / (1024 * 1024))} MB
             </p>
@@ -490,11 +550,11 @@ export function PdfCompressor() {
         </div>
       ) : (
         /* Document Summary + Compression Controls Workspace */
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:items-start lg:gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
           {/* Document Details & Result Card */}
           <section
             aria-label="Document summary and compression result"
-            className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 md:col-span-6"
+            className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-6"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
@@ -502,7 +562,10 @@ export function PdfCompressor() {
                   <PdfDocumentIcon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#20272B]">
+                  <p
+                    title={loadedPdf.name}
+                    className="truncate text-sm font-semibold text-[#20272B]"
+                  >
                     {loadedPdf.name}
                   </p>
                   <p className="mt-0.5 text-xs text-[#556168]">
@@ -516,14 +579,14 @@ export function PdfCompressor() {
                   type="button"
                   disabled={isCompressing}
                   onClick={() => fileInputRef.current?.click()}
-                  className="min-h-[40px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="min-h-[44px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   Replace
                 </button>
                 <button
                   type="button"
                   onClick={handleRemoveFile}
-                  className="min-h-[40px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="min-h-[44px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   Remove
                 </button>
@@ -532,19 +595,19 @@ export function PdfCompressor() {
 
             <dl className="grid grid-cols-3 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs">
               <div>
-                <dt className="text-[#5C7E8F]">Original size</dt>
+                <dt className="text-[#466677]">Original size</dt>
                 <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                   {formatPdfBytes(loadedPdf.sizeBytes)}
                 </dd>
               </div>
               <div>
-                <dt className="text-[#5C7E8F]">Pages</dt>
+                <dt className="text-[#466677]">Pages</dt>
                 <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                   {loadedPdf.inspection.pageCount}
                 </dd>
               </div>
               <div>
-                <dt className="text-[#5C7E8F]">Images</dt>
+                <dt className="text-[#466677]">Images</dt>
                 <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                   {loadedPdf.inspection.imageCount}
                 </dd>
@@ -573,7 +636,7 @@ export function PdfCompressor() {
                       {progress.detail}
                     </span>
                   </div>
-                  <span className="shrink-0 font-mono text-[#5C7E8F] tabular-nums">
+                  <span className="shrink-0 font-mono text-[#466677] tabular-nums">
                     {progress.percent !== null
                       ? `${progress.percent}%`
                       : "Working"}
@@ -628,7 +691,7 @@ export function PdfCompressor() {
                           className={`text-xs font-semibold uppercase tracking-[0.06em] ${
                             isResultCurrent
                               ? "text-[#0E6B56]"
-                              : "text-[#5C7E8F]"
+                              : "text-[#466677]"
                           }`}
                         >
                           {isResultCurrent
@@ -643,25 +706,25 @@ export function PdfCompressor() {
 
                     <dl className="grid grid-cols-2 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs sm:grid-cols-4">
                       <div>
-                        <dt className="text-[#5C7E8F]">Original</dt>
+                        <dt className="text-[#466677]">Original</dt>
                         <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                           {formatPdfBytes(resultState.output.originalSizeBytes)}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[#5C7E8F]">New size</dt>
+                        <dt className="text-[#466677]">New size</dt>
                         <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                           {formatPdfBytes(resultState.output.outputSizeBytes)}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[#5C7E8F]">Saved</dt>
+                        <dt className="text-[#466677]">Saved</dt>
                         <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                           {formatPdfBytes(resultState.output.bytesSaved)}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[#5C7E8F]">Reduction</dt>
+                        <dt className="text-[#466677]">Reduction</dt>
                         <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                           {resultState.output.percentReduction}%
                         </dd>
@@ -688,7 +751,7 @@ export function PdfCompressor() {
                                 unit: nextGentlerPreset.unit,
                               })
                             }
-                            className="inline-flex min-h-[32px] items-center rounded-lg border border-[#B47A3C]/45 bg-white px-3 py-1 font-medium text-[#5D3D1A] transition-colors hover:bg-[#FDF5EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                            className="inline-flex min-h-[40px] items-center rounded-lg border border-[#B47A3C]/45 bg-white px-3 py-1 font-medium text-[#5D3D1A] transition-colors hover:bg-[#FDF5EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[36px]"
                           >
                             Try {nextGentlerPreset.label} target
                           </button>
@@ -709,7 +772,7 @@ export function PdfCompressor() {
           {/* Compression Controls Panel */}
           <form
             onSubmit={handleSubmit}
-            className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 md:col-span-6"
+            className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-6"
           >
             {/* Mode Switch */}
             <div className="space-y-2.5">
@@ -798,6 +861,23 @@ export function PdfCompressor() {
                         type="button"
                         aria-pressed={targetUnit === unit}
                         onClick={() => {
+                          if (unit === targetUnit) return;
+                          const numeric = Number(targetValueInput);
+                          if (Number.isFinite(numeric) && numeric > 0) {
+                            if (unit === "MB") {
+                              const mb = Math.max(
+                                0.1,
+                                Math.round((numeric / 1024) * 100) / 100
+                              );
+                              setTargetValueInput(String(mb));
+                            } else {
+                              setTargetValueInput(
+                                String(Math.max(10, Math.round(numeric * 1024)))
+                              );
+                            }
+                          } else {
+                            setTargetValueInput(unit === "MB" ? "1" : "300");
+                          }
                           setTargetUnit(unit);
                           setIsResultCurrent(false);
                           setErrorMessage(null);
@@ -830,7 +910,7 @@ export function PdfCompressor() {
                           setIsResultCurrent(false);
                           setErrorMessage(null);
                         }}
-                        className={`min-h-[34px] rounded-lg px-2.5 py-1 font-mono text-xs font-medium tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                        className={`min-h-[36px] rounded-lg px-2.5 py-1 font-mono text-xs font-medium tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                           isSelected
                             ? "bg-[#426579] text-white"
                             : "bg-[#F3F6F7] text-[#20272B] hover:bg-[#D4DDE2]/70"
@@ -842,7 +922,7 @@ export function PdfCompressor() {
                   })}
                 </div>
 
-                <p className="text-xs leading-relaxed text-[#5C7E8F]">
+                <p className="text-xs leading-relaxed text-[#466677]">
                   Target sizes are best-effort goals. Achievable size depends on
                   document text, fonts, and embedded images.
                 </p>
@@ -850,13 +930,13 @@ export function PdfCompressor() {
             )}
 
             {/* Discreet Expandable Advanced Settings */}
-            <div className="border-t border-[#D4DDE2]/80 pt-4">
+            <div className="border-t border-[#D4DDE2]/80 pt-3">
               <button
                 type="button"
                 aria-expanded={showAdvanced}
                 aria-controls="pdf-advanced-settings"
                 onClick={() => setShowAdvanced((prev) => !prev)}
-                className="flex w-full items-center justify-between rounded-sm py-1 text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                className="flex min-h-[44px] w-full items-center justify-between rounded-lg py-1.5 text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
               >
                 <span>Advanced settings</span>
                 <ChevronDownIcon
@@ -959,7 +1039,7 @@ export function PdfCompressor() {
       {/* Quiet Privacy Line */}
       <div className="flex items-center justify-between pt-1">
         <p className="inline-flex items-center gap-2 text-xs text-[#556168]">
-          <LockIcon className="h-3.5 w-3.5 text-[#5C7E8F]" />
+          <LockIcon className="h-3.5 w-3.5 shrink-0 text-[#466677]" />
           <span>Your files stay on your device.</span>
         </p>
       </div>

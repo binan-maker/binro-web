@@ -264,6 +264,7 @@ export function ImageToPdf() {
   const [margin, setMargin] = useState<PdfMarginOption>("small");
   const [outputFilenameInput, setOutputFilenameInput] =
     useState<string>("binro-images.pdf");
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
 
   const [resultState, setResultState] = useState<ConversionResultState | null>(
     null
@@ -670,13 +671,13 @@ export function ImageToPdf() {
           className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
         >
           <div
-            className={`flex min-h-[280px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center transition-colors duration-150 sm:min-h-[320px] ${
+            className={`flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-150 sm:min-h-[300px] sm:py-12 ${
               isDraggingUpload
                 ? "border-[#426579] bg-[#F3F6F7]"
                 : "border-[#D4DDE2] bg-[#F3F6F7]/50 hover:border-[#5C7E8F]"
             }`}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#5C7E8F]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#466677]">
               <ImageStackIcon className="h-6 w-6" />
             </div>
 
@@ -692,7 +693,7 @@ export function ImageToPdf() {
             <p className="mt-3 text-sm text-[#556168]">
               or drag and drop images here
             </p>
-            <p className="mt-4 text-xs text-[#5C7E8F]">
+            <p className="mt-4 text-xs text-[#466677]">
               JPG, JPEG, PNG, WebP, BMP, GIF · Up to {MAX_IMAGES_PER_PDF} images
               · {maxPerImageMb} MB per image · {maxTotalMb} MB total
             </p>
@@ -716,21 +717,21 @@ export function ImageToPdf() {
             }
           }}
           onDrop={handleUploadDrop}
-          className={`grid grid-cols-1 gap-6 md:grid-cols-12 md:items-start lg:gap-8 rounded-2xl transition-colors ${
+          className={`grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8 rounded-2xl transition-colors ${
             isDraggingUpload ? "ring-2 ring-[#5C7E8F]/40" : ""
           }`}
         >
           {/* Left Column: Ordered Image List */}
           <section
             aria-label="Selected images in PDF page order"
-            className="space-y-4 rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 md:col-span-7"
+            className="space-y-4 rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-7"
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold text-[#20272B]">
                   Images to convert
                 </h2>
-                <p className="mt-0.5 font-mono text-xs text-[#5C7E8F] tabular-nums">
+                <p className="mt-0.5 font-mono text-xs text-[#466677] tabular-nums">
                   {queuedImages.length}{" "}
                   {queuedImages.length === 1 ? "image" : "images"} ·{" "}
                   {queuedImages.length}{" "}
@@ -748,16 +749,16 @@ export function ImageToPdf() {
                     queuedImages.length >= MAX_IMAGES_PER_PDF
                   }
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] whitespace-nowrap transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
-                  <PlusIcon className="h-3.5 w-3.5 text-[#5C7E8F]" />
+                  <PlusIcon className="h-3.5 w-3.5 text-[#466677]" />
                   <span>{isInspecting ? "Adding..." : "Add More Images"}</span>
                 </button>
                 <button
                   type="button"
                   disabled={isConverting}
                   onClick={handleReset}
-                  className="min-h-[40px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] whitespace-nowrap transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                  className="min-h-[44px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   Clear all
                 </button>
@@ -825,7 +826,7 @@ export function ImageToPdf() {
                     <div className="flex min-w-0 flex-1 items-center gap-2.5">
                       <span
                         aria-hidden="true"
-                        className="hidden h-8 w-5 shrink-0 cursor-grab items-center justify-center text-[#A2A2A2] sm:inline-flex"
+                        className="hidden h-8 w-5 shrink-0 cursor-grab items-center justify-center text-[#556168] sm:inline-flex"
                       >
                         <GripIcon className="h-4 w-4" />
                       </span>
@@ -859,7 +860,7 @@ export function ImageToPdf() {
                           {item.rotation !== 0 ? ` · ${item.rotation}°` : ""}
                         </p>
                         {item.isAnimatedGif ? (
-                          <p className="mt-0.5 text-[11px] text-[#5C7E8F]">
+                          <p className="mt-0.5 text-xs text-[#466677]">
                             Animated GIF: first frame only
                           </p>
                         ) : null}
@@ -873,7 +874,7 @@ export function ImageToPdf() {
                         onClick={() => rotateItem(item.id)}
                         aria-label={`Rotate ${item.name} 90 degrees clockwise`}
                         title="Rotate 90°"
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#556168] transition-colors hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#556168] transition-colors hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:h-10 sm:w-10"
                       >
                         <RotateRightIcon className="h-4 w-4" />
                       </button>
@@ -884,7 +885,7 @@ export function ImageToPdf() {
                         onClick={() => moveItem(index, index - 1)}
                         aria-label={`Move ${item.name} up`}
                         title="Move up"
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#556168] transition-colors hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-35 disabled:hover:border-[#D4DDE2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#556168] transition-colors hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-35 disabled:hover:border-[#D4DDE2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:h-10 sm:w-10"
                       >
                         <ChevronUpIcon className="h-4 w-4" />
                       </button>
@@ -897,7 +898,7 @@ export function ImageToPdf() {
                         onClick={() => moveItem(index, index + 1)}
                         aria-label={`Move ${item.name} down`}
                         title="Move down"
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#556168] transition-colors hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-35 disabled:hover:border-[#D4DDE2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#556168] transition-colors hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-35 disabled:hover:border-[#D4DDE2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:h-10 sm:w-10"
                       >
                         <ChevronDownIcon className="h-4 w-4" />
                       </button>
@@ -908,7 +909,7 @@ export function ImageToPdf() {
                         onClick={() => removeItem(item.id)}
                         aria-label={`Remove ${item.name}`}
                         title="Remove image"
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#556168] transition-colors hover:bg-[#FDF5F5] hover:text-[#7A2727] disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#556168] transition-colors hover:bg-[#FDF5F5] hover:text-[#7A2727] disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:h-10 sm:w-10"
                       >
                         <CloseIcon className="h-4 w-4" />
                       </button>
@@ -927,11 +928,11 @@ export function ImageToPdf() {
           {/* Right Column: Page Settings, Progress & Output */}
           <form
             onSubmit={handleConvert}
-            className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 md:col-span-5"
+            className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-5"
           >
             {/* Page Size */}
             <fieldset className="space-y-2">
-              <legend className="text-xs font-medium text-[#5C7E8F]">
+              <legend className="text-xs font-medium text-[#466677]">
                 Page size
               </legend>
               <div className="grid grid-cols-3 gap-2">
@@ -962,7 +963,7 @@ export function ImageToPdf() {
                         ) : null}
                         <span>{opt.label}</span>
                       </span>
-                      <span className="mt-0.5 text-[10px] text-[#5C7E8F]">
+                      <span className="mt-0.5 text-xs text-[#466677]">
                         {opt.hint}
                       </span>
                     </button>
@@ -973,7 +974,7 @@ export function ImageToPdf() {
 
             {/* Orientation */}
             <fieldset className="space-y-2">
-              <legend className="text-xs font-medium text-[#5C7E8F]">
+              <legend className="text-xs font-medium text-[#466677]">
                 Orientation
               </legend>
               {pageSize === "fit" ? (
@@ -1017,7 +1018,7 @@ export function ImageToPdf() {
 
             {/* Margins */}
             <fieldset className="space-y-2">
-              <legend className="text-xs font-medium text-[#5C7E8F]">
+              <legend className="text-xs font-medium text-[#466677]">
                 Margins
               </legend>
               <div className="grid grid-cols-3 gap-2">
@@ -1050,29 +1051,53 @@ export function ImageToPdf() {
                   );
                 })}
               </div>
-              <p className="text-[11px] text-[#556168]">
+              <p className="text-xs text-[#556168]">
                 Images are centered and fitted proportionally without cropping or
                 stretching.
               </p>
             </fieldset>
 
-            {/* Output Filename */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="image-to-pdf-filename"
-                className="block text-xs font-medium text-[#5C7E8F]"
+            {/* Progressive Disclosure: Secondary Options */}
+            <div className="border-t border-[#D4DDE2]/80 pt-3">
+              <button
+                type="button"
+                aria-expanded={showAdvanced}
+                aria-controls="image-to-pdf-advanced"
+                onClick={() => setShowAdvanced((prev) => !prev)}
+                className="flex min-h-[44px] w-full items-center justify-between rounded-lg py-1.5 text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
               >
-                Output filename
-              </label>
-              <input
-                id="image-to-pdf-filename"
-                type="text"
-                value={outputFilenameInput}
-                disabled={isConverting}
-                onChange={(event) => setOutputFilenameInput(event.target.value)}
-                placeholder="binro-images.pdf"
-                className="min-h-[42px] w-full rounded-xl border border-[#D4DDE2] bg-white px-3 py-2 font-mono text-sm text-[#20272B] focus:border-[#5C7E8F] focus:outline-none focus:ring-2 focus:ring-[#5C7E8F]/30 disabled:bg-[#F3F6F7]"
-              />
+                <span>Advanced options</span>
+                <ChevronDownIcon
+                  className={`h-4 w-4 transition-transform duration-150 ${
+                    showAdvanced ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {showAdvanced ? (
+                <div
+                  id="image-to-pdf-advanced"
+                  className="mt-2.5 space-y-2 rounded-xl bg-[#F3F6F7] p-3.5"
+                >
+                  <label
+                    htmlFor="image-to-pdf-filename"
+                    className="block text-xs font-medium text-[#466677]"
+                  >
+                    Output filename
+                  </label>
+                  <input
+                    id="image-to-pdf-filename"
+                    type="text"
+                    value={outputFilenameInput}
+                    disabled={isConverting}
+                    onChange={(event) =>
+                      setOutputFilenameInput(event.target.value)
+                    }
+                    placeholder="binro-images.pdf"
+                    className="min-h-[42px] w-full rounded-xl border border-[#D4DDE2] bg-white px-3 py-2 font-mono text-sm text-[#20272B] focus:border-[#5C7E8F] focus:outline-none focus:ring-2 focus:ring-[#5C7E8F]/30 disabled:bg-[#F3F6F7]"
+                  />
+                </div>
+              ) : null}
             </div>
 
             {/* Honest Size / Quality Note */}
@@ -1096,7 +1121,7 @@ export function ImageToPdf() {
                       {progress.detail}
                     </span>
                   </div>
-                  <span className="shrink-0 font-mono text-[#5C7E8F]">
+                  <span className="shrink-0 font-mono text-[#466677]">
                     Working
                   </span>
                 </div>
@@ -1123,13 +1148,13 @@ export function ImageToPdf() {
 
                 <dl className="grid grid-cols-2 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs">
                   <div>
-                    <dt className="text-[#5C7E8F]">Pages</dt>
+                    <dt className="text-[#466677]">Pages</dt>
                     <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                       {resultState.pageCount}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[#5C7E8F]">PDF size</dt>
+                    <dt className="text-[#466677]">PDF size</dt>
                     <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
                       {formatFileBytes(resultState.outputSizeBytes)}
                     </dd>
@@ -1194,7 +1219,7 @@ export function ImageToPdf() {
       {/* Quiet Local Privacy Note */}
       <div className="flex items-center justify-between pt-1">
         <p className="inline-flex items-center gap-2 text-xs text-[#556168]">
-          <LockIcon className="h-3.5 w-3.5 shrink-0 text-[#5C7E8F]" />
+          <LockIcon className="h-3.5 w-3.5 shrink-0 text-[#466677]" />
           <span>
             Your images are processed locally in your browser. They are not
             uploaded to BinRo servers.

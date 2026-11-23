@@ -23,7 +23,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  md: "min-h-[40px] px-4 py-2 text-sm",
+  md: "min-h-[44px] px-4 py-2 text-sm sm:min-h-[40px]",
   lg: "min-h-[44px] px-5 py-2.5 text-sm sm:text-[0.9375rem]",
 };
 
@@ -35,7 +35,7 @@ export function ButtonLink({
   external = false,
   className = "",
 }: ButtonLinkProps) {
-  const classes = `inline-flex items-center justify-center gap-2 rounded-xl font-medium whitespace-nowrap shrink-0 transition-all duration-150 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+  const classes = `inline-flex items-center justify-center gap-2 rounded-xl font-medium text-center transition-all duration-150 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
 
   if (external) {
     return (

@@ -44,14 +44,14 @@ export default function IntelligencePage() {
         note="In planning — applied AI products are not yet publicly launched."
       />
 
-      <section className="bg-white py-14 sm:py-16">
+      <section className="bg-white py-12 sm:py-16">
         <Container>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             <div className="lg:col-span-4">
-              <p className="text-xs font-medium uppercase tracking-[0.06em] text-[#5C7E8F]">
+              <p className="text-xs font-medium tracking-[0.04em] text-[#466677]">
                 Approach
               </p>
-              <h2 className="mt-2 text-xl font-semibold tracking-tight text-[#20272B] sm:text-2xl">
+              <h2 className="mt-2 text-[clamp(1.375rem,1.15rem+1vw,1.875rem)] font-semibold tracking-tight text-[#20272B] text-balance">
                 Grounded in real utility.
               </h2>
             </div>
@@ -59,10 +59,10 @@ export default function IntelligencePage() {
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 lg:col-span-8">
               {APPLIED_PRINCIPLES.map((item) => (
                 <div key={item.title}>
-                  <h3 className="text-sm font-semibold text-[#20272B]">
+                  <h3 className="text-base font-semibold text-[#20272B]">
                     {item.title}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[#556168]">
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#556168] text-pretty">
                     {item.detail}
                   </p>
                 </div>
@@ -72,7 +72,7 @@ export default function IntelligencePage() {
         </Container>
       </section>
 
-      <section className="border-t border-[#D4DDE2] bg-white py-14 sm:py-20">
+      <section className="border-t border-[#D4DDE2] bg-white py-12 sm:py-16">
         <Container>
           <SectionHeading
             kicker="Planned areas"

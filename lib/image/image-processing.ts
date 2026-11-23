@@ -31,6 +31,7 @@ export interface ProcessImageOptions {
   targetHeight: number;
   outputFormat: SupportedMimeType;
   targetSizeKb: number | null;
+  lossyQuality?: number | null;
   jpegBackgroundColor: string;
 }
 
@@ -91,6 +92,94 @@ export function formatBytes(bytes: number): string {
   }
   const mb = kb / 1024;
   return `${mb.toFixed(2)} MB`;
+}
+
+export function detectImageSignature(bytes: Uint8Array): {
+  mimeType: SupportedMimeType | null;
+  detectedOtherFormat: string | null;
+} {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return { mimeType: "image/jpeg", detectedOtherFormat: null };
+  }
+
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  ) {
+    return { mimeType: "image/png", detectedOtherFormat: null };
+  }
+
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 && // R
+    bytes[1] === 0x49 && // I
+    bytes[2] === 0x46 && // F
+    bytes[3] === 0x46 && // F
+    bytes[8] === 0x57 && // W
+    bytes[9] === 0x45 && // E
+    bytes[10] === 0x42 && // B
+    bytes[11] === 0x50 // P
+  ) {
+    return { mimeType: "image/webp", detectedOtherFormat: null };
+  }
+
+  if (
+    bytes.length >= 5 &&
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46 &&
+    bytes[4] === 0x2d
+  ) {
+    return { mimeType: null, detectedOtherFormat: "PDF document" };
+  }
+
+  if (
+    bytes.length >= 6 &&
+    bytes[0] === 0x47 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x38
+  ) {
+    return { mimeType: null, detectedOtherFormat: "GIF image" };
+  }
+
+  if (bytes.length >= 2 && bytes[0] === 0x42 && bytes[1] === 0x4d) {
+    return { mimeType: null, detectedOtherFormat: "BMP image" };
+  }
+
+  if (
+    bytes.length >= 12 &&
+    bytes[4] === 0x66 &&
+    bytes[5] === 0x74 &&
+    bytes[6] === 0x79 &&
+    bytes[7] === 0x70
+  ) {
+    const brand = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]).toLowerCase();
+    if (brand.startsWith("hei") || brand === "mif1" || brand === "msf1") {
+      return { mimeType: null, detectedOtherFormat: "HEIC/HEIF image" };
+    }
+    if (brand.startsWith("avi")) {
+      return { mimeType: null, detectedOtherFormat: "AVIF image" };
+    }
+  }
+
+  const headText = new TextDecoder("utf-8", { fatal: false })
+    .decode(bytes.subarray(0, Math.min(bytes.length, 256)))
+    .trimStart()
+    .toLowerCase();
+  if (headText.startsWith("<svg") || (headText.startsWith("<?xml") && headText.includes("<svg"))) {
+    return { mimeType: null, detectedOtherFormat: "SVG vector graphic" };
+  }
+
+  return { mimeType: null, detectedOtherFormat: null };
 }
 
 export function detectSupportedMimeType(file: File): SupportedMimeType | null {
@@ -207,24 +296,30 @@ function detectTransparency(
   const canvas = document.createElement("canvas");
   canvas.width = sampleW;
   canvas.height = sampleH;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return false;
 
-  ctx.clearRect(0, 0, sampleW, sampleH);
-  ctx.drawImage(drawable, 0, 0, sampleW, sampleH);
+  try {
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return false;
 
-  const pixels = ctx.getImageData(0, 0, sampleW, sampleH).data;
-  for (let i = 3; i < pixels.length; i += 4) {
-    if (pixels[i] < 252) {
-      return true;
+    ctx.clearRect(0, 0, sampleW, sampleH);
+    ctx.drawImage(drawable, 0, 0, sampleW, sampleH);
+
+    const pixels = ctx.getImageData(0, 0, sampleW, sampleH).data;
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] < 252) {
+        return true;
+      }
     }
+    return false;
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
   }
-  return false;
 }
 
-export async function inspectSelectedImage(
+export async function validateImageFileHeader(
   file: File
-): Promise<LoadedImageInfo> {
+): Promise<SupportedMimeType> {
   if (file.size === 0) {
     throw new Error("The selected file is empty.");
   }
@@ -234,12 +329,37 @@ export async function inspectSelectedImage(
     );
   }
 
-  const mimeType = detectSupportedMimeType(file);
-  if (!mimeType) {
+  const headSlice = new Uint8Array(
+    await file.slice(0, Math.min(file.size, 512)).arrayBuffer()
+  );
+  const sig = detectImageSignature(headSlice);
+
+  if (sig.mimeType) {
+    return sig.mimeType;
+  }
+
+  if (sig.detectedOtherFormat) {
     throw new Error(
-      "Unsupported file format. Please choose a JPG, JPEG, PNG, or WebP image."
+      `This file is a ${sig.detectedOtherFormat}, not a JPG, PNG, or WebP image. Please convert or choose a supported image file.`
     );
   }
+
+  const metadataGuess = detectSupportedMimeType(file);
+  if (metadataGuess) {
+    throw new Error(
+      `"${file.name}" does not contain valid ${getFormatLabel(metadataGuess)} image data. The file may be corrupted or renamed from another format.`
+    );
+  }
+
+  throw new Error(
+    "Unsupported file format. Please choose a JPG, JPEG, PNG, or WebP image."
+  );
+}
+
+export async function inspectSelectedImage(
+  file: File
+): Promise<LoadedImageInfo> {
+  const mimeType = await validateImageFileHeader(file);
 
   const decoded = await decodeFileToDrawable(file);
   try {
@@ -401,7 +521,12 @@ export async function processImageInBrowser(
         }
       }
     } else if (targetBytes === null) {
-      qualityUsed = DEFAULT_LOSSY_QUALITY;
+      const requestedQuality =
+        typeof options.lossyQuality === "number" &&
+        Number.isFinite(options.lossyQuality)
+          ? Math.min(MAX_QUALITY, Math.max(MIN_QUALITY, options.lossyQuality))
+          : DEFAULT_LOSSY_QUALITY;
+      qualityUsed = Number(requestedQuality.toFixed(2));
       finalBlob = await canvasToBlob(canvas, options.outputFormat, qualityUsed);
     } else {
       // Test highest quality first.

@@ -19,27 +19,27 @@ export function DivisionHero({
   children,
 }: DivisionHeroProps) {
   return (
-    <section className="border-b border-[#D4DDE2] bg-gradient-to-b from-[#F3F6F7]/80 to-white py-14 sm:py-20">
+    <section className="border-b border-[#D4DDE2] bg-gradient-to-b from-[#F3F6F7]/80 to-white py-10 sm:py-14">
       <Container>
-        <div className="max-w-2xl">
-          <div className="flex items-center gap-2.5 text-xs font-medium uppercase tracking-[0.08em] text-[#5C7E8F]">
+        <div className="max-w-[62ch]">
+          <div className="flex items-center gap-2.5 text-xs font-medium tracking-[0.04em] text-[#466677]">
             <DivisionIcon id={division.id} className="h-4 w-4 text-[#426579]" />
             <span>{division.name}</span>
           </div>
 
-          <h1 className="mt-4 text-[clamp(2rem,4vw,3.125rem)] font-semibold leading-[1.12] tracking-[-0.02em] text-[#20272B] text-balance">
+          <h1 className="mt-3 text-[clamp(1.75rem,1.35rem+1.5vw,2.375rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-[#20272B] text-balance">
             {headline}
           </h1>
 
-          <p className="mt-4 text-base leading-relaxed text-[#556168] sm:text-lg">
+          <p className="mt-3.5 text-base leading-relaxed text-[#556168] text-pretty">
             {description}
           </p>
 
           {note ? (
-            <p className="mt-3 text-sm text-[#5C7E8F]">{note}</p>
+            <p className="mt-2.5 text-sm font-medium text-[#466677]">{note}</p>
           ) : null}
 
-          {children ? <div className="mt-7">{children}</div> : null}
+          {children ? <div className="mt-6">{children}</div> : null}
         </div>
       </Container>
     </section>

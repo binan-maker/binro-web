@@ -28,33 +28,33 @@ interface HelpItem {
 const HELP_ITEMS: HelpItem[] = [
   {
     id: "how-to-resize",
-    question: "How to resize an image",
+    question: "How to resize an image for forms or uploads",
     answer:
-      "Choose or drop a JPG, PNG, or WebP image. Enter the required width or height in pixels—keeping Maintain aspect ratio checked prevents stretching—and select Resize image.",
+      "Choose or drop a JPG, PNG, or WebP image. Enter the exact width or height in pixels—keeping Maintain aspect ratio checked prevents stretching—and select Resize image. Useful for passport photos, scanned signatures, ID proofs, and web assets.",
   },
   {
     id: "how-to-reduce",
-    question: "How to reduce image size",
+    question: "How to stay under a KB file size limit",
     answer:
-      "Set a maximum file size in KB using a preset or custom number, choose JPG or WebP format, and select Resize image. The tool finds the highest quality that fits within your KB target.",
+      "Select JPG or WebP, enter your maximum size in KB (such as 20 KB, 50 KB, or 100 KB), and select Resize image. BinRo searches for the highest visual quality that fits within your KB limit.",
   },
   {
     id: "supported-formats",
-    question: "Supported formats",
+    question: "Choosing between JPG, PNG, and WebP",
     answer:
-      "You can upload and export JPG/JPEG, PNG, and WebP images. Use JPG for photos and small form uploads, PNG for lossless transparency, and WebP for efficient web sizes.",
+      "Use JPG for photos, signatures, and strict portal upload limits. Use PNG when you need lossless detail or transparent backgrounds. Use WebP for compact web images with optional transparency.",
   },
   {
     id: "target-unreachable",
     question: "Why some file-size targets cannot be reached",
     answer:
-      "Large pixel dimensions or lossless formats like PNG require a minimum amount of data. If a target KB limit cannot be reached, reduce the pixel dimensions or switch from PNG to JPG or WebP.",
+      "Very large pixel dimensions or lossless PNG output require a minimum amount of data. If a KB limit cannot be reached, lower the pixel dimensions slightly or switch from PNG to JPG or WebP.",
   },
   {
     id: "privacy-offline",
     question: "Privacy and offline usage",
     answer:
-      "All resizing and compression run locally in your browser—files are never uploaded. After your first online visit caches the tool, you can reopen and use it without an internet connection.",
+      "All resizing and compression run locally on your device—files are never uploaded. After your first online visit caches the tool, you can reopen and use it without an internet connection.",
   },
 ];
 
@@ -63,7 +63,7 @@ export function ImageResizerHelp() {
 
   return (
     <div className="mx-auto max-w-[1040px]">
-      <h2 className="text-sm font-medium text-[#5C7E8F]">Help & reference</h2>
+      <h2 className="text-sm font-medium text-[#466677]">Help & reference</h2>
       <div className="mt-3 divide-y divide-[#D4DDE2] rounded-2xl border border-[#D4DDE2] bg-white">
         {HELP_ITEMS.map((item) => {
           const isOpen = openId === item.id;
@@ -79,7 +79,7 @@ export function ImageResizerHelp() {
               >
                 <span>{item.question}</span>
                 <ChevronDownIcon
-                  className={`h-4 w-4 shrink-0 text-[#5C7E8F] transition-transform duration-150 ${
+                  className={`h-4 w-4 shrink-0 text-[#466677] transition-transform duration-150 ${
                     isOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -87,7 +87,7 @@ export function ImageResizerHelp() {
               {isOpen ? (
                 <div
                   id={`help-panel-${item.id}`}
-                  className="px-5 pb-4 text-sm leading-relaxed text-[#4A555C]"
+                  className="max-w-[68ch] px-5 pb-4 text-sm leading-relaxed text-[#556168] text-pretty"
                 >
                   {item.answer}
                 </div>

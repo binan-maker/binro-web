@@ -34,7 +34,7 @@ export function MobileNavigation() {
         onClick={() =>
           setOpenForPathname((prev) => (prev === pathname ? null : pathname))
         }
-        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#20272B] transition-colors duration-150 hover:bg-[#F3F6F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#20272B] transition-colors duration-150 hover:bg-[#F3F6F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
       >
         {isOpen ? (
           <CloseIcon className="h-5 w-5" />
@@ -46,7 +46,7 @@ export function MobileNavigation() {
       {isOpen ? (
         <div
           id="mobile-navigation-panel"
-          className="fixed inset-x-0 top-16 z-40 border-b border-[#D4DDE2] bg-white/95 backdrop-blur-md shadow-sm"
+          className="absolute inset-x-0 top-full z-40 max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-[#D4DDE2] bg-white/98 backdrop-blur-md shadow-sm"
         >
           <nav
             aria-label="Mobile navigation"

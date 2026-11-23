@@ -229,10 +229,15 @@ export function parsePageSelectionExpression(
       const startStr = parts[0].trim();
       const endStr = parts[1].trim();
       if (!startStr) {
+        if (seg.startsWith("-") && /^\d+$/.test(endStr)) {
+          return {
+            ok: false,
+            error: `Page numbers must be 1 or greater (negative numbers like ${seg} are not valid). Enter positive numbers starting from 1.`,
+          };
+        }
         return {
           ok: false,
-          error:
-            "Page numbers must be 1 or greater (negative or incomplete ranges are not valid).",
+          error: `Incomplete range "${seg}". Enter both a start and end page, such as 1-5.`,
         };
       }
       if (!endStr) {
@@ -260,13 +265,14 @@ export function parsePageSelectionExpression(
       if (start < 1 || end < 1) {
         return {
           ok: false,
-          error: "Page numbers must be 1 or greater (page 0 is not valid).",
+          error:
+            "Page numbers must be 1 or greater (page 0 is not valid). Enter numbers starting from 1.",
         };
       }
       if (start > end) {
         return {
           ok: false,
-          error: `Invalid range ${start}-${end}: start page cannot be greater than end page.`,
+          error: `Invalid range ${start}-${end}: start page cannot be greater than end page. Enter the lower page first, such as ${end}-${start}.`,
         };
       }
       if (end > totalPages) {
@@ -303,7 +309,8 @@ export function parsePageSelectionExpression(
       if (pageNum < 1) {
         return {
           ok: false,
-          error: "Page numbers must be 1 or greater (page 0 is not valid).",
+          error:
+            "Page numbers must be 1 or greater (page 0 is not valid). Enter numbers starting from 1.",
         };
       }
       if (pageNum > totalPages) {
@@ -390,7 +397,7 @@ export function buildSplitByRangesPlan(
           : overlapPages.join(", ");
       return {
         ok: false,
-        error: `Range ${idx + 1} (${raw.trim()}) overlaps with Range ${ownerIdx + 1} on ${overlapPages.length === 1 ? "page" : "pages"} ${previewPages}.`,
+        error: `Range ${idx + 1} (${raw.trim()}) overlaps with Range ${ownerIdx + 1} on ${overlapPages.length === 1 ? "page" : "pages"} ${previewPages}. Adjust one of the ranges so each page is included only once.`,
         rangeIndex: idx,
       };
     }

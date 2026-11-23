@@ -544,14 +544,13 @@ export function PdfSplitter() {
 
   const handleSplitSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
-    if (
-      !selectedFile ||
-      !inspection ||
-      !planPreview ||
-      !planPreview.ok ||
-      isInspecting ||
-      isSplitting
-    ) {
+    if (!selectedFile || !inspection || isInspecting || isSplitting) {
+      return;
+    }
+    if (!planPreview || !planPreview.ok) {
+      setErrorMessage(
+        planPreview?.error ?? "Enter valid page numbers or ranges to continue."
+      );
       return;
     }
 
@@ -736,13 +735,13 @@ export function PdfSplitter() {
           className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
         >
           <div
-            className={`flex min-h-[280px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center transition-colors duration-150 sm:min-h-[320px] ${
+            className={`flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-150 sm:min-h-[300px] sm:py-12 ${
               isDragging
                 ? "border-[#426579] bg-[#F3F6F7]"
                 : "border-[#D4DDE2] bg-[#F3F6F7]/50 hover:border-[#5C7E8F]"
             }`}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#5C7E8F]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#466677]">
               <PdfDocumentIcon className="h-6 w-6" />
             </div>
 
@@ -758,7 +757,7 @@ export function PdfSplitter() {
             <p className="mt-3 text-sm text-[#556168]">
               or drop a PDF document here
             </p>
-            <p className="mt-4 text-xs text-[#5C7E8F]">
+            <p className="mt-4 text-xs text-[#466677]">
               Single PDF · up to {maxMb} MB
             </p>
           </div>
@@ -805,7 +804,7 @@ export function PdfSplitter() {
                 type="button"
                 disabled={isInspecting || isSplitting}
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex min-h-[40px] items-center justify-center rounded-xl border border-[#D4DDE2] bg-white px-3.5 py-1.5 text-xs font-medium text-[#20272B] whitespace-nowrap transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[#D4DDE2] bg-white px-3.5 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
               >
                 {isInspecting ? "Loading..." : "Replace PDF"}
               </button>
@@ -813,22 +812,22 @@ export function PdfSplitter() {
                 type="button"
                 disabled={isSplitting}
                 onClick={handleReset}
-                className="min-h-[40px] rounded-xl px-3 py-1.5 text-xs font-medium text-[#556168] whitespace-nowrap transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                className="min-h-[44px] rounded-xl px-3 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
               >
                 Reset
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:items-start lg:gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
             {/* Left / Main Column: Split Mode & Configuration */}
             <form
               onSubmit={handleSplitSubmit}
-              className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 md:col-span-7"
+              className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-7"
             >
               {/* Mode Selector */}
               <div className="space-y-2">
-                <span className="block text-xs font-medium text-[#5C7E8F]">
+                <span className="block text-xs font-medium text-[#466677]">
                   Split mode
                 </span>
                 <div
@@ -868,6 +867,12 @@ export function PdfSplitter() {
                     );
                   })}
                 </div>
+                {inspection.pageCount === 1 ? (
+                  <p className="rounded-lg bg-[#F3F6F7] px-3 py-2 text-xs text-[#466677]">
+                    This PDF has 1 page. You can save a clean copy with Extract
+                    selected pages or Split every page.
+                  </p>
+                ) : null}
               </div>
 
               {/* Mode A: Split by Page Ranges */}
@@ -886,7 +891,7 @@ export function PdfSplitter() {
                       onClick={handleAddRange}
                       className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                     >
-                      <PlusIcon className="h-3.5 w-3.5 text-[#5C7E8F]" />
+                      <PlusIcon className="h-3.5 w-3.5 text-[#466677]" />
                       <span>Add range</span>
                     </button>
                   </div>
@@ -910,7 +915,7 @@ export function PdfSplitter() {
                         >
                           <label
                             htmlFor={`split-range-${row.id}`}
-                            className="w-14 shrink-0 font-mono text-xs font-medium text-[#5C7E8F] tabular-nums sm:w-16"
+                            className="w-14 shrink-0 font-mono text-xs font-medium text-[#466677] tabular-nums sm:w-16"
                           >
                             Range {idx + 1}
                           </label>
@@ -927,7 +932,9 @@ export function PdfSplitter() {
                               }
                               placeholder={
                                 idx === 0
-                                  ? `1-${Math.min(5, inspection.pageCount)}`
+                                  ? inspection.pageCount === 1
+                                    ? "1"
+                                    : `1-${Math.min(5, inspection.pageCount)}`
                                   : "e.g. 6-10"
                               }
                               aria-invalid={isRowErrorTarget || undefined}
@@ -938,7 +945,7 @@ export function PdfSplitter() {
                               }`}
                             />
                             {rowParsed.ok ? (
-                              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-[11px] text-[#5C7E8F] tabular-nums sm:right-3">
+                              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-xs text-[#466677] tabular-nums sm:right-3">
                                 {rowParsed.pages.length}{" "}
                                 {rowParsed.pages.length === 1 ? "pg" : "pgs"}
                               </span>
@@ -951,7 +958,7 @@ export function PdfSplitter() {
                             onClick={() => handleRemoveRange(row.id)}
                             aria-label={`Remove range ${idx + 1}`}
                             title="Remove range"
-                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#556168] transition-colors hover:bg-[#FDF5F5] hover:text-[#7A2727] disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#556168] transition-colors hover:bg-[#FDF5F5] hover:text-[#7A2727] disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:h-10 sm:w-10"
                           >
                             <CloseIcon className="h-4 w-4" />
                           </button>
@@ -990,7 +997,7 @@ export function PdfSplitter() {
                           isSplitting || rangeRows.length >= MAX_SPLIT_RANGES
                         }
                         onClick={handleIncludeRemainingRanges}
-                        className="inline-flex min-h-[34px] shrink-0 items-center justify-center rounded-lg border border-[#B47A3C]/40 bg-white px-2.5 py-1 text-xs font-medium text-[#5D3D1A] transition-colors hover:bg-[#FDF9F3] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                        className="inline-flex min-h-[38px] shrink-0 items-center justify-center rounded-lg border border-[#B47A3C]/40 bg-white px-2.5 py-1 text-xs font-medium text-[#5D3D1A] transition-colors hover:bg-[#FDF9F3] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                       >
                         Add remaining pages
                       </button>
@@ -1125,7 +1132,7 @@ export function PdfSplitter() {
                         {progress.detail}
                       </span>
                     </div>
-                    <span className="shrink-0 font-mono text-[#5C7E8F] tabular-nums">
+                    <span className="shrink-0 font-mono text-[#466677] tabular-nums">
                       {progress.percent !== null
                         ? `${progress.percent}%`
                         : "Working"}
@@ -1170,7 +1177,7 @@ export function PdfSplitter() {
             {/* Right Column: Plan Preview OR Ready Downloads */}
             <aside
               aria-label="Split plan and downloads"
-              className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 md:col-span-5"
+              className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-5"
             >
               {resultState && !isSplitting ? (
                 <div aria-live="polite" className="space-y-4">
@@ -1239,7 +1246,7 @@ export function PdfSplitter() {
 
                   {/* Output Files List */}
                   <div className="space-y-2 border-t border-[#D4DDE2] pt-4">
-                    <p className="text-xs font-medium text-[#5C7E8F]">
+                    <p className="text-xs font-medium text-[#466677]">
                       Generated files
                     </p>
                     <ul className="max-h-[340px] divide-y divide-[#D4DDE2] overflow-y-auto rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/40">
@@ -1255,7 +1262,7 @@ export function PdfSplitter() {
                             >
                               {item.filename}
                             </p>
-                            <p className="mt-0.5 font-mono text-[11px] text-[#556168] tabular-nums">
+                            <p className="mt-0.5 font-mono text-xs text-[#556168] tabular-nums">
                               {item.rangeLabel} ·{" "}
                               {formatPdfBytes(item.sizeBytes)}
                             </p>
@@ -1266,7 +1273,7 @@ export function PdfSplitter() {
                               triggerBrowserDownload(item.url, item.filename)
                             }
                             aria-label={`Download ${item.filename}`}
-                            className="inline-flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-lg border border-[#D4DDE2] bg-white px-2.5 py-1 text-xs font-medium text-[#426579] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                            className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#426579] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                           >
                             <DownloadIcon className="h-3.5 w-3.5" />
                             <span>Save</span>
@@ -1303,14 +1310,14 @@ export function PdfSplitter() {
                           >
                             {plan.filename}
                           </p>
-                          <span className="shrink-0 font-mono text-[11px] text-[#556168] tabular-nums">
+                          <span className="shrink-0 font-mono text-xs text-[#556168] tabular-nums">
                             {plan.pages.length}{" "}
                             {plan.pages.length === 1 ? "page" : "pages"}
                           </span>
                         </li>
                       ))}
                       {planPreview.plans.length > 50 ? (
-                        <li className="px-3.5 py-2.5 text-center font-mono text-xs text-[#5C7E8F] tabular-nums">
+                        <li className="px-3.5 py-2.5 text-center font-mono text-xs text-[#466677] tabular-nums">
                           + {planPreview.plans.length - 50} more files
                         </li>
                       ) : null}
@@ -1331,7 +1338,7 @@ export function PdfSplitter() {
       {/* Quiet Privacy Line */}
       <div className="flex items-center justify-between pt-1">
         <p className="inline-flex items-center gap-2 text-xs text-[#556168]">
-          <LockIcon className="h-3.5 w-3.5 text-[#5C7E8F]" />
+          <LockIcon className="h-3.5 w-3.5 text-[#466677]" />
           <span>Your files are processed locally in your browser.</span>
         </p>
       </div>

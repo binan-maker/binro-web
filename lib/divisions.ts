@@ -6,12 +6,16 @@ export interface ProductCategory {
   group?: string;
 }
 
+export type DivisionStatus = "active" | "planned";
+
 export interface DivisionInfo {
   id: DivisionId;
   index: string;
   name: string;
   shortName: string;
   href: string;
+  status: DivisionStatus;
+  statusLabel: string;
   tagline: string;
   summary: string;
   overview: string;
@@ -27,10 +31,13 @@ export const DIVISIONS: DivisionInfo[] = [
     name: "BinRo Utilities",
     shortName: "Utilities",
     href: "/utilities",
-    tagline: "Practical digital tools for everyday use.",
-    summary: "Simple tools for everyday digital tasks.",
+    status: "active",
+    statusLabel: "Active now",
+    tagline: "Practical technology tools for everyday digital tasks.",
+    summary:
+      "Make useful digital capabilities easier to access and use every day.",
     overview:
-      "Fast, private browser tools built to complete common tasks without accounts or complexity.",
+      "Fast, browser-local tools built to help people work with images and PDFs cleanly without accounts or unnecessary complexity.",
     accentColor: "#5C7E8F",
     accentSurface: "#F3F6F7",
     categories: [
@@ -78,10 +85,13 @@ export const DIVISIONS: DivisionInfo[] = [
     name: "BinRo Business",
     shortName: "Business",
     href: "/business",
-    tagline: "Software that helps businesses operate better.",
-    summary: "Technology that helps businesses work better.",
+    status: "planned",
+    statusLabel: "In planning",
+    tagline: "Software and technology that help businesses operate more effectively.",
+    summary:
+      "Help organizations improve daily operations and access dependable business tools.",
     overview:
-      "BinRo Business aims to build clear operational software for managing daily workflows, inventory, customers, teams, and finances.",
+      "Planned operational software for managing everyday workflows, inventory, billing, customers, and teams with clarity.",
     accentColor: "#426579",
     accentSurface: "#F3F6F7",
     categories: [
@@ -141,10 +151,13 @@ export const DIVISIONS: DivisionInfo[] = [
     name: "BinRo Developer",
     shortName: "Developer",
     href: "/developer",
-    tagline: "Tools, APIs and technology for developers.",
-    summary: "Tools and technology for developers.",
+    status: "planned",
+    statusLabel: "In planning",
+    tagline: "Tools, APIs, infrastructure and technology for developers.",
+    summary:
+      "Help developers create, build, deploy, and innovate more effectively.",
     overview:
-      "Planned developer primitives, typed SDKs, and clear APIs designed to keep software engineering direct and dependable.",
+      "Planned developer utilities, typed SDKs, APIs, and service foundations designed to keep software engineering direct and reliable.",
     accentColor: "#426579",
     accentSurface: "#F3F6F7",
     categories: [
@@ -204,10 +217,14 @@ export const DIVISIONS: DivisionInfo[] = [
     name: "BinRo Intelligence",
     shortName: "Intelligence",
     href: "/intelligence",
-    tagline: "AI products and systems for useful work.",
-    summary: "AI and intelligent technology for useful work.",
+    status: "planned",
+    statusLabel: "In planning",
+    tagline:
+      "Artificial intelligence, intelligent systems, agents and automation.",
+    summary:
+      "Develop responsible intelligent systems that help people understand, create, and automate meaningful work.",
     overview:
-      "Practical AI-powered products and workflow systems built upon proven models, focused on real utility and clear human oversight.",
+      "Planned applied AI products and workflow automation built with clear human oversight to assist with real work.",
     accentColor: "#426579",
     accentSurface: "#F3F6F7",
     categories: [

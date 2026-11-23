@@ -10,7 +10,7 @@ export function DesktopNav() {
   return (
     <nav
       aria-label="Primary navigation"
-      className="hidden md:flex items-center gap-5 lg:gap-7"
+      className="hidden md:flex flex-wrap items-center gap-x-5 gap-y-1 lg:gap-x-7"
     >
       {PRIMARY_NAV.map((item) => {
         const isActive =
@@ -21,7 +21,7 @@ export function DesktopNav() {
             key={item.href}
             href={item.href}
             aria-current={isActive ? "page" : undefined}
-            className={`relative inline-flex h-16 items-center text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-sm ${
+            className={`relative inline-flex min-h-[44px] items-center py-2 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-sm ${
               isActive
                 ? "text-[#20272B]"
                 : "text-[#556168] hover:text-[#20272B]"
