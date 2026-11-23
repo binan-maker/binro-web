@@ -6,7 +6,6 @@ import {
   useRef,
   useState,
   type ClipboardEvent,
-  type SVGProps,
 } from "react";
 import {
   inspectSplitPdfFileInBrowser,
@@ -30,115 +29,20 @@ import {
   type SplitOutputPlan,
   type SplitProgress,
 } from "@/lib/pdf/pdf-split";
-
-function PdfDocumentIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M14 3.5H7.5A2 2 0 0 0 5.5 5.5v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8.5L14 3.5Z" />
-      <path d="M14 3.5v5h4.5" />
-      <path d="M9 13h6" />
-      <path d="M9 16.5h4" />
-    </svg>
-  );
-}
-
-function LockIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <rect x="4.5" y="9" width="11" height="7.5" rx="1.75" />
-      <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
-    </svg>
-  );
-}
-
-function DownloadIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M10 3.5v9.5" />
-      <path d="m6.5 9.5 3.5 3.5 3.5-3.5" />
-      <path d="M4 15.5h12" />
-    </svg>
-  );
-}
-
-function PlusIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M10 4.5v11" />
-      <path d="M4.5 10h11" />
-    </svg>
-  );
-}
-
-function CloseIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5.5 5.5 9 9" />
-      <path d="m14.5 5.5-9 9" />
-    </svg>
-  );
-}
-
-function CheckIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.85}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5 10.5 3.5 3.5 6.5-7.5" />
-    </svg>
-  );
-}
+import {
+  CheckIcon,
+  CloseIcon,
+  DownloadIcon,
+  PdfDocumentIcon,
+  PlusIcon,
+} from "@/components/ui/Icons";
+import {
+  ToolErrorBanner,
+  ToolPrivacyNote,
+  ToolProgressCard,
+  ToolResultHeader,
+  ToolUploadDropzone,
+} from "@/components/utilities/ToolUI";
 
 interface RangeRow {
   id: string;
@@ -172,6 +76,8 @@ const STAGE_LABELS: Record<SplitProgress["stage"], string> = {
   packaging: "Packaging ZIP",
   verifying: "Verifying",
 };
+
+const PAGE_GRID_WINDOW = 60;
 
 function createRowId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -223,6 +129,27 @@ function computeUncoveredRangeStrings(
   return missingRanges;
 }
 
+function formatPagesAsCompactExpression(pages: number[]): string {
+  if (pages.length === 0) return "";
+  const sorted = Array.from(new Set(pages)).sort((a, b) => a - b);
+  const tokens: string[] = [];
+  let start = sorted[0];
+  let end = sorted[0];
+
+  for (let i = 1; i < sorted.length; i += 1) {
+    const current = sorted[i];
+    if (current === end + 1) {
+      end = current;
+    } else {
+      tokens.push(start === end ? `${start}` : `${start}-${end}`);
+      start = current;
+      end = current;
+    }
+  }
+  tokens.push(start === end ? `${start}` : `${start}-${end}`);
+  return tokens.join(", ");
+}
+
 function triggerBrowserDownload(url: string, filename: string) {
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -245,6 +172,7 @@ export function PdfSplitter() {
     { id: "initial-1", value: "" },
   ]);
   const [extractExpression, setExtractExpression] = useState<string>("");
+  const [pageGridWindowIndex, setPageGridWindowIndex] = useState<number>(0);
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isInspecting, setIsInspecting] = useState<boolean>(false);
@@ -305,12 +233,13 @@ export function PdfSplitter() {
       setSelectedFile(file);
       setInspection(info);
       setRangeRows(buildInitialRanges(info.pageCount));
-      setExtractExpression("");
+      setPageGridWindowIndex(0);
       if (info.pageCount === 1) {
         setSplitMode("extract");
         setExtractExpression("1");
       } else {
         setSplitMode("ranges");
+        setExtractExpression("");
       }
       setAnnouncement(
         `Loaded ${file.name}, ${info.pageCount} ${info.pageCount === 1 ? "page" : "pages"}.`
@@ -344,9 +273,7 @@ export function PdfSplitter() {
     const files = event.dataTransfer.files;
     if (!files || files.length === 0) return;
     if (files.length > 1) {
-      setErrorMessage(
-        "Please select one PDF document at a time."
-      );
+      setErrorMessage("Please select one PDF document at a time.");
       return;
     }
     void handleSelectFile(files[0]);
@@ -361,6 +288,7 @@ export function PdfSplitter() {
     setInspection(null);
     setRangeRows([{ id: createRowId(), value: "" }]);
     setExtractExpression("");
+    setPageGridWindowIndex(0);
     setSplitMode("ranges");
     setIsInspecting(false);
     setIsSplitting(false);
@@ -471,6 +399,72 @@ export function PdfSplitter() {
     });
   };
 
+  // Visual Page Grid state for Extract mode (two-way synced with extractExpression)
+  const parsedExtractSelection = useMemo(() => {
+    if (!inspection) return new Set<number>();
+    const parsed = parsePageSelectionExpression(
+      extractExpression,
+      inspection.pageCount
+    );
+    return parsed.ok ? new Set(parsed.pages) : new Set<number>();
+  }, [extractExpression, inspection]);
+
+  const handleTogglePageTile = (pageNum: number) => {
+    if (!inspection || isSplitting) return;
+    clearResults();
+    setErrorMessage(null);
+    const next = new Set(parsedExtractSelection);
+    if (next.has(pageNum)) {
+      next.delete(pageNum);
+    } else {
+      next.add(pageNum);
+    }
+    const expr = formatPagesAsCompactExpression(Array.from(next));
+    setExtractExpression(expr);
+  };
+
+  const handleQuickExtractPreset = (preset: "all" | "odd" | "even" | "clear") => {
+    if (!inspection || isSplitting) return;
+    clearResults();
+    setErrorMessage(null);
+    if (preset === "clear") {
+      setExtractExpression("");
+      return;
+    }
+    if (preset === "all") {
+      setExtractExpression(
+        inspection.pageCount === 1 ? "1" : `1-${inspection.pageCount}`
+      );
+      return;
+    }
+    const pages: number[] = [];
+    for (let p = 1; p <= inspection.pageCount; p += 1) {
+      if (preset === "odd" && p % 2 === 1) pages.push(p);
+      if (preset === "even" && p % 2 === 0) pages.push(p);
+    }
+    setExtractExpression(formatPagesAsCompactExpression(pages));
+  };
+
+  // Range coverage map for visual range overview
+  const rangeCoverageByPage = useMemo(() => {
+    if (!inspection || splitMode !== "ranges") return null;
+    const owner = new Map<number, number>();
+    rangeRows.forEach((row, idx) => {
+      const parsed = parsePageSelectionExpression(
+        row.value,
+        inspection.pageCount
+      );
+      if (parsed.ok) {
+        for (const p of parsed.pages) {
+          if (!owner.has(p)) {
+            owner.set(p, idx + 1);
+          }
+        }
+      }
+    });
+    return owner;
+  }, [inspection, splitMode, rangeRows]);
+
   // Real-time plan validation for the active mode
   const planPreview = useMemo(() => {
     if (!selectedFile || !inspection) {
@@ -549,7 +543,7 @@ export function PdfSplitter() {
     }
     if (!planPreview || !planPreview.ok) {
       setErrorMessage(
-        planPreview?.error ?? "Enter valid page numbers or ranges to continue."
+        planPreview?.error ?? "Select or enter valid pages to continue."
       );
       return;
     }
@@ -688,6 +682,24 @@ export function PdfSplitter() {
     !isInspecting &&
     !isSplitting;
 
+  // Pagination calculations for the visual Page Picker Grid
+  const totalGridWindows = inspection
+    ? Math.ceil(inspection.pageCount / PAGE_GRID_WINDOW)
+    : 1;
+  const safeWindowIndex = Math.min(pageGridWindowIndex, totalGridWindows - 1);
+  const windowStartPage = safeWindowIndex * PAGE_GRID_WINDOW + 1;
+  const windowEndPage = inspection
+    ? Math.min(inspection.pageCount, windowStartPage + PAGE_GRID_WINDOW - 1)
+    : 0;
+  const visiblePageNumbers = useMemo(() => {
+    if (!inspection) return [];
+    const list: number[] = [];
+    for (let p = windowStartPage; p <= windowEndPage; p += 1) {
+      list.push(p);
+    }
+    return list;
+  }, [inspection, windowStartPage, windowEndPage]);
+
   return (
     <div className="mx-auto max-w-[1040px] space-y-5">
       <input
@@ -703,25 +715,18 @@ export function PdfSplitter() {
         {announcement}
       </div>
 
-      {errorMessage ? (
-        <div
-          role="alert"
-          className="flex flex-col gap-3 rounded-xl border border-[#B44A4A]/40 bg-[#FDF5F5] px-4 py-3 text-sm text-[#7A2727] sm:flex-row sm:items-center sm:justify-between"
-        >
-          <p>{errorMessage}</p>
-          <button
-            type="button"
-            onClick={() => setErrorMessage(null)}
-            className="inline-flex min-h-[36px] shrink-0 items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
-          >
-            Dismiss
-          </button>
-        </div>
-      ) : null}
+      <ToolErrorBanner
+        messages={errorMessage ? [errorMessage] : []}
+        onDismiss={() => setErrorMessage(null)}
+      />
 
       {!selectedFile || !inspection ? (
-        /* Clean Single-PDF Upload Dropzone */
-        <div
+        <ToolUploadDropzone
+          icon={<PdfDocumentIcon className="h-6 w-6" />}
+          buttonLabel="Select PDF file"
+          busyLabel="Reading PDF..."
+          isBusy={isInspecting}
+          isDragging={isDragging}
           onDragOver={(event) => {
             event.preventDefault();
             setIsDragging(true);
@@ -732,38 +737,11 @@ export function PdfSplitter() {
             }
           }}
           onDrop={handleDrop}
-          className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
-        >
-          <div
-            className={`flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-150 sm:min-h-[300px] sm:py-12 ${
-              isDragging
-                ? "border-[#426579] bg-[#F3F6F7]"
-                : "border-[#D4DDE2] bg-[#F3F6F7]/50 hover:border-[#5C7E8F]"
-            }`}
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#466677]">
-              <PdfDocumentIcon className="h-6 w-6" />
-            </div>
-
-            <button
-              type="button"
-              disabled={isInspecting}
-              onClick={() => fileInputRef.current?.click()}
-              className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#426579] px-6 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
-            >
-              {isInspecting ? "Reading PDF..." : "Select PDF file"}
-            </button>
-
-            <p className="mt-3 text-sm text-[#556168]">
-              or drop a PDF document here
-            </p>
-            <p className="mt-4 text-xs text-[#466677]">
-              Single PDF · up to {maxMb} MB
-            </p>
-          </div>
-        </div>
+          onButtonClick={() => fileInputRef.current?.click()}
+          helperText="or drop a PDF document here"
+          supportText={`Extract individual pages or divide into sections · up to ${maxMb} MB`}
+        />
       ) : (
-        /* Split Workspace */
         <div
           onDragOver={(event) => {
             event.preventDefault();
@@ -782,7 +760,7 @@ export function PdfSplitter() {
           {/* Selected PDF Summary Bar */}
           <div className="flex flex-col gap-3 rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:flex-row sm:items-center sm:justify-between sm:p-5">
             <div className="flex min-w-0 items-center gap-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#D4DDE2] bg-[#F3F6F7] text-[#426579]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D4DDE2] bg-[#F3F6F7] text-[#426579]">
                 <PdfDocumentIcon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -793,8 +771,9 @@ export function PdfSplitter() {
                   {selectedFile.name}
                 </p>
                 <p className="mt-0.5 font-mono text-xs text-[#556168] tabular-nums">
-                  {formatPdfBytes(selectedFile.size)} · {inspection.pageCount}{" "}
-                  {inspection.pageCount === 1 ? "page" : "pages"}
+                  {inspection.pageCount}{" "}
+                  {inspection.pageCount === 1 ? "page" : "pages"} ·{" "}
+                  {formatPdfBytes(selectedFile.size)}
                 </p>
               </div>
             </div>
@@ -804,7 +783,7 @@ export function PdfSplitter() {
                 type="button"
                 disabled={isInspecting || isSplitting}
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[#D4DDE2] bg-white px-3.5 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
+                className="inline-flex min-h-[42px] items-center justify-center rounded-xl border border-[#D4DDE2] bg-white px-3.5 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
               >
                 {isInspecting ? "Loading..." : "Replace PDF"}
               </button>
@@ -812,34 +791,46 @@ export function PdfSplitter() {
                 type="button"
                 disabled={isSplitting}
                 onClick={handleReset}
-                className="min-h-[44px] rounded-xl px-3 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
+                className="min-h-[42px] rounded-xl px-3 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
               >
-                Reset
+                Start over
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
-            {/* Left / Main Column: Split Mode & Configuration */}
+            {/* Left / Main Column: Mode & Visual Page Selection */}
             <form
               onSubmit={handleSplitSubmit}
               className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-7"
             >
-              {/* Mode Selector */}
-              <div className="space-y-2">
-                <span className="block text-xs font-medium text-[#466677]">
-                  Split mode
+              {/* Mode Cards */}
+              <div className="space-y-2.5">
+                <span className="block text-xs font-semibold text-[#20272B]">
+                  Choose how to split
                 </span>
                 <div
                   role="group"
                   aria-label="Choose how to split this PDF"
-                  className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+                  className="grid grid-cols-1 gap-2.5 sm:grid-cols-3"
                 >
                   {(
                     [
-                      { id: "ranges", label: "Split by page ranges" },
-                      { id: "extract", label: "Extract selected pages" },
-                      { id: "every-page", label: "Split every page" },
+                      {
+                        id: "ranges",
+                        label: "Split by ranges",
+                        hint: "Divide into parts (1-5, 6-10)",
+                      },
+                      {
+                        id: "extract",
+                        label: "Pick pages",
+                        hint: "Select exact pages into 1 PDF",
+                      },
+                      {
+                        id: "every-page",
+                        label: "Every page",
+                        hint: "Save each page separately",
+                      },
                     ] as const
                   ).map((option) => {
                     const active = splitMode === option.id;
@@ -850,37 +841,43 @@ export function PdfSplitter() {
                         disabled={isSplitting}
                         aria-pressed={active}
                         onClick={() => handleModeChange(option.id)}
-                        className={`relative flex min-h-[44px] items-center justify-center rounded-xl border px-3 py-2 text-center text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] disabled:opacity-60 ${
+                        className={`flex min-h-[72px] flex-col items-start justify-between rounded-xl border p-3 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] disabled:opacity-60 ${
                           active
-                            ? "border-[#426579] bg-[#F3F6F7] text-[#20272B] shadow-[inset_0_0_0_1px_#426579]"
-                            : "border-[#D4DDE2] bg-white text-[#556168] hover:border-[#5C7E8F] hover:text-[#20272B]"
+                            ? "border-[#426579] bg-[#F3F6F7] shadow-[inset_0_0_0_1px_#426579]"
+                            : "border-[#D4DDE2] bg-white hover:border-[#5C7E8F]"
                         }`}
                       >
-                        {active ? (
-                          <span
-                            aria-hidden="true"
-                            className="mr-1.5 h-2 w-2 shrink-0 rounded-full bg-[#1CC8A0]"
-                          />
-                        ) : null}
-                        <span>{option.label}</span>
+                        <div className="flex w-full items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-[#20272B]">
+                            {option.label}
+                          </span>
+                          {active ? (
+                            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded bg-[#426579] text-white">
+                              <CheckIcon className="h-2.5 w-2.5" />
+                            </span>
+                          ) : null}
+                        </div>
+                        <span className="mt-1 text-[11px] leading-snug text-[#556168]">
+                          {option.hint}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
                 {inspection.pageCount === 1 ? (
-                  <p className="rounded-lg bg-[#F3F6F7] px-3 py-2 text-xs text-[#466677]">
-                    This PDF has 1 page. You can save a clean copy with Extract
-                    selected pages or Split every page.
+                  <p className="rounded-xl bg-[#F3F6F7] px-3.5 py-2.5 text-xs text-[#466677]">
+                    This PDF has 1 page. You can save a clean copy with Pick
+                    pages or Every page.
                   </p>
                 ) : null}
               </div>
 
               {/* Mode A: Split by Page Ranges */}
               {splitMode === "ranges" ? (
-                <div className="space-y-4">
+                <div className="space-y-4 border-t border-[#D4DDE2]/80 pt-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs text-[#556168]">
-                      Each range creates a separate PDF file (for example{" "}
+                      Each part creates its own PDF file (for example{" "}
                       <span className="font-mono text-[#20272B]">1-5</span>).
                     </p>
                     <button
@@ -889,10 +886,10 @@ export function PdfSplitter() {
                         isSplitting || rangeRows.length >= MAX_SPLIT_RANGES
                       }
                       onClick={handleAddRange}
-                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                     >
                       <PlusIcon className="h-3.5 w-3.5 text-[#466677]" />
-                      <span>Add range</span>
+                      <span>Add part</span>
                     </button>
                   </div>
 
@@ -917,7 +914,7 @@ export function PdfSplitter() {
                             htmlFor={`split-range-${row.id}`}
                             className="w-14 shrink-0 font-mono text-xs font-medium text-[#466677] tabular-nums sm:w-16"
                           >
-                            Range {idx + 1}
+                            Part {idx + 1}
                           </label>
 
                           <div className="relative min-w-0 flex-1">
@@ -938,14 +935,14 @@ export function PdfSplitter() {
                                   : "e.g. 6-10"
                               }
                               aria-invalid={isRowErrorTarget || undefined}
-                              className={`min-h-[42px] w-full rounded-xl border bg-white px-3 py-2 pr-14 font-mono text-sm text-[#20272B] transition-colors focus:outline-none focus:ring-2 disabled:bg-[#F3F6F7] sm:pr-20 ${
+                              className={`min-h-[44px] w-full rounded-xl border bg-white px-3.5 py-2 pr-16 font-mono text-sm text-[#20272B] transition-colors focus:outline-none focus:ring-2 disabled:bg-[#F3F6F7] sm:pr-20 ${
                                 isRowErrorTarget
                                   ? "border-[#B44A4A] focus:border-[#B44A4A] focus:ring-[#B44A4A]/25"
                                   : "border-[#D4DDE2] focus:border-[#5C7E8F] focus:ring-[#5C7E8F]/30"
                               }`}
                             />
                             {rowParsed.ok ? (
-                              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-xs text-[#466677] tabular-nums sm:right-3">
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-[#466677] tabular-nums">
                                 {rowParsed.pages.length}{" "}
                                 {rowParsed.pages.length === 1 ? "pg" : "pgs"}
                               </span>
@@ -956,8 +953,8 @@ export function PdfSplitter() {
                             type="button"
                             disabled={rangeRows.length <= 1 || isSplitting}
                             onClick={() => handleRemoveRange(row.id)}
-                            aria-label={`Remove range ${idx + 1}`}
-                            title="Remove range"
+                            aria-label={`Remove part ${idx + 1}`}
+                            title="Remove part"
                             className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#556168] transition-colors hover:bg-[#FDF5F5] hover:text-[#7A2727] disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:h-10 sm:w-10"
                           >
                             <CloseIcon className="h-4 w-4" />
@@ -966,6 +963,44 @@ export function PdfSplitter() {
                       );
                     })}
                   </div>
+
+                  {/* Visual Page Coverage Strip for quick human verification */}
+                  {inspection.pageCount <= 60 && rangeCoverageByPage ? (
+                    <div className="space-y-1.5 rounded-xl bg-[#F3F6F7]/75 p-3">
+                      <div className="flex items-center justify-between text-[11px] text-[#556168]">
+                        <span>Page map</span>
+                        <span>
+                          {rangeCoverageByPage.size} of {inspection.pageCount}{" "}
+                          pages assigned
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.from(
+                          { length: inspection.pageCount },
+                          (_, i) => i + 1
+                        ).map((pageNum) => {
+                          const partNum = rangeCoverageByPage.get(pageNum);
+                          return (
+                            <span
+                              key={pageNum}
+                              title={
+                                partNum
+                                  ? `Page ${pageNum} → Part ${partNum}`
+                                  : `Page ${pageNum} (omitted)`
+                              }
+                              className={`inline-flex h-6 min-w-[26px] items-center justify-center rounded-md border px-1 font-mono text-[11px] tabular-nums ${
+                                partNum
+                                  ? "border-[#426579]/35 bg-white font-medium text-[#20272B]"
+                                  : "border-dashed border-[#D4DDE2] bg-transparent text-[#556168]/75"
+                              }`}
+                            >
+                              {pageNum}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
 
                   {showRangesError && planPreview && !planPreview.ok ? (
                     <p
@@ -976,7 +1011,7 @@ export function PdfSplitter() {
                     </p>
                   ) : hasEmptyRangeRow && hasNonEmptyRangeInput ? (
                     <p className="text-xs text-[#556168]">
-                      Enter pages for every range row or remove empty rows to
+                      Enter pages for every part or remove empty rows to
                       continue.
                     </p>
                   ) : null}
@@ -989,7 +1024,7 @@ export function PdfSplitter() {
                         {planPreview.uncoveredPageCount} of{" "}
                         {inspection.pageCount}{" "}
                         {inspection.pageCount === 1 ? "page is" : "pages are"}{" "}
-                        not included in your ranges and will be omitted.
+                        not included and will be skipped.
                       </p>
                       <button
                         type="button"
@@ -1006,15 +1041,143 @@ export function PdfSplitter() {
                 </div>
               ) : null}
 
-              {/* Mode B: Extract Selected Pages */}
+              {/* Mode B: Visual Page Picker + Synced Expression */}
               {splitMode === "extract" ? (
-                <div className="space-y-3">
+                <div className="space-y-4 border-t border-[#D4DDE2]/80 pt-5">
+                  {/* Visual Page Selection Toolbar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-[#20272B]">
+                      Click pages to include ({parsedExtractSelection.size} of{" "}
+                      {inspection.pageCount} selected)
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        disabled={isSplitting}
+                        onClick={() => handleQuickExtractPreset("all")}
+                        className="min-h-[34px] rounded-lg bg-[#F3F6F7] px-2.5 py-1 text-xs font-medium text-[#20272B] transition-colors hover:bg-[#D4DDE2]/70 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                      >
+                        Select all
+                      </button>
+                      {inspection.pageCount > 1 ? (
+                        <>
+                          <button
+                            type="button"
+                            disabled={isSplitting}
+                            onClick={() => handleQuickExtractPreset("odd")}
+                            className="min-h-[34px] rounded-lg bg-[#F3F6F7] px-2.5 py-1 text-xs font-medium text-[#20272B] transition-colors hover:bg-[#D4DDE2]/70 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                          >
+                            Odd
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isSplitting}
+                            onClick={() => handleQuickExtractPreset("even")}
+                            className="min-h-[34px] rounded-lg bg-[#F3F6F7] px-2.5 py-1 text-xs font-medium text-[#20272B] transition-colors hover:bg-[#D4DDE2]/70 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                          >
+                            Even
+                          </button>
+                        </>
+                      ) : null}
+                      <button
+                        type="button"
+                        disabled={
+                          isSplitting || parsedExtractSelection.size === 0
+                        }
+                        onClick={() => handleQuickExtractPreset("clear")}
+                        className="min-h-[34px] rounded-lg px-2.5 py-1 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Interactive Page Tile Grid */}
+                  <div className="space-y-2.5 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/55 p-3">
+                    <div
+                      role="group"
+                      aria-label="Selectable PDF pages"
+                      className="grid max-h-[260px] grid-cols-4 gap-2 overflow-y-auto pr-0.5 sm:grid-cols-6"
+                    >
+                      {visiblePageNumbers.map((pageNum) => {
+                        const isSelected = parsedExtractSelection.has(pageNum);
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            disabled={isSplitting}
+                            aria-pressed={isSelected}
+                            aria-label={`Page ${pageNum}`}
+                            onClick={() => handleTogglePageTile(pageNum)}
+                            className={`relative flex min-h-[56px] flex-col items-center justify-center rounded-lg border p-2 transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                              isSelected
+                                ? "border-[#426579] bg-white text-[#20272B] shadow-[inset_0_0_0_1px_#426579]"
+                                : "border-[#D4DDE2] bg-white/80 text-[#556168] hover:border-[#5C7E8F] hover:bg-white hover:text-[#20272B]"
+                            }`}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={`mb-1 inline-flex h-4 w-4 items-center justify-center rounded ${
+                                isSelected
+                                  ? "bg-[#426579] text-white"
+                                  : "border border-[#D4DDE2] bg-[#F3F6F7]"
+                              }`}
+                            >
+                              {isSelected ? (
+                                <CheckIcon className="h-2.5 w-2.5" />
+                              ) : null}
+                            </span>
+                            <span className="font-mono text-xs font-medium tabular-nums">
+                              Pg {pageNum}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {totalGridWindows > 1 ? (
+                      <div className="flex items-center justify-between gap-2 border-t border-[#D4DDE2] pt-2.5 text-xs">
+                        <span className="font-mono text-[#556168] tabular-nums">
+                          Showing pages {windowStartPage}–{windowEndPage} of{" "}
+                          {inspection.pageCount}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            disabled={safeWindowIndex === 0}
+                            onClick={() =>
+                              setPageGridWindowIndex((prev) =>
+                                Math.max(0, prev - 1)
+                              )
+                            }
+                            className="min-h-[34px] rounded-lg border border-[#D4DDE2] bg-white px-2.5 py-1 text-xs font-medium text-[#20272B] hover:border-[#5C7E8F] disabled:opacity-40"
+                          >
+                            Previous
+                          </button>
+                          <button
+                            type="button"
+                            disabled={safeWindowIndex >= totalGridWindows - 1}
+                            onClick={() =>
+                              setPageGridWindowIndex((prev) =>
+                                Math.min(totalGridWindows - 1, prev + 1)
+                              )
+                            }
+                            className="min-h-[34px] rounded-lg border border-[#D4DDE2] bg-white px-2.5 py-1 text-xs font-medium text-[#20272B] hover:border-[#5C7E8F] disabled:opacity-40"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Two-way Synced Custom Input */}
                   <div className="space-y-1.5">
                     <label
                       htmlFor="extract-pages-input"
                       className="block text-xs font-medium text-[#556168]"
                     >
-                      Pages to extract (saved into one PDF in the order entered)
+                      Or type pages / ranges (saved in the exact order entered)
                     </label>
                     <input
                       id="extract-pages-input"
@@ -1043,27 +1206,13 @@ export function PdfSplitter() {
                     >
                       {planPreview.error}
                     </p>
-                  ) : planPreview?.ok && planPreview.mode === "extract" ? (
-                    <p className="font-mono text-xs text-[#426579] tabular-nums">
-                      {planPreview.plans[0].pages.length}{" "}
-                      {planPreview.plans[0].pages.length === 1
-                        ? "page selected"
-                        : "pages selected"}{" "}
-                      · Output: {planPreview.plans[0].filename}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-[#556168]">
-                      Document has {inspection.pageCount}{" "}
-                      {inspection.pageCount === 1 ? "page" : "pages"} (1–
-                      {inspection.pageCount}).
-                    </p>
-                  )}
+                  ) : null}
                 </div>
               ) : null}
 
               {/* Mode C: Split Every Page */}
               {splitMode === "every-page" ? (
-                <div className="space-y-3 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/65 p-4">
+                <div className="space-y-2.5 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/65 p-4">
                   {planPreview?.ok && planPreview.mode === "every-page" ? (
                     <>
                       <p className="text-sm font-medium text-[#20272B] tabular-nums">
@@ -1081,8 +1230,8 @@ export function PdfSplitter() {
                       </p>
                       <p className="text-xs text-[#556168]">
                         {planPreview.plans.length > 1
-                          ? "Download all files together as a ZIP archive or save individual pages."
-                          : "Ready to output as a single-page PDF."}
+                          ? "Download everything together as one ZIP archive or save individual pages."
+                          : "Ready to save as a single-page PDF."}
                       </p>
                     </>
                   ) : planPreview && !planPreview.ok ? (
@@ -1092,13 +1241,13 @@ export function PdfSplitter() {
                   ) : (
                     <p className="text-xs text-[#556168]">
                       Up to {MAX_EVERY_PAGE_OUTPUTS} individual page files can
-                      be generated at once.
+                      be created at once.
                     </p>
                   )}
                 </div>
               ) : null}
 
-              {/* Document Compatibility Limitations Notice */}
+              {/* Document Compatibility Notices */}
               {inspection.hasDigitalSignature ? (
                 <p className="rounded-xl border border-[#B47A3C]/40 bg-[#FDF9F3] px-3.5 py-2.5 text-xs leading-relaxed text-[#5D3D1A]">
                   This PDF contains a digital signature. Splitting creates new
@@ -1110,56 +1259,18 @@ export function PdfSplitter() {
               inspection.hasOutlines ||
               inspection.hasLinks ? (
                 <p className="rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/75 px-3.5 py-2.5 text-xs leading-relaxed text-[#556168]">
-                  This document contains interactive form fields, outlines, or
-                  links. Splitting creates new PDF files, and bookmarks,
-                  annotations, document metadata, or cross-page links may not
-                  transfer identically.
+                  Interactive form fields, bookmarks, or cross-page links in
+                  this PDF may not carry over identically to split files.
                 </p>
               ) : null}
 
-              {/* Progress Panel */}
               {isSplitting && progress ? (
-                <div
-                  aria-live="polite"
-                  className="space-y-2.5 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/65 p-4"
-                >
-                  <div className="flex items-baseline justify-between gap-2 text-xs">
-                    <div className="min-w-0">
-                      <span className="font-semibold text-[#20272B]">
-                        {STAGE_LABELS[progress.stage]}
-                      </span>
-                      <span className="ml-2 text-[#556168]">
-                        {progress.detail}
-                      </span>
-                    </div>
-                    <span className="shrink-0 font-mono text-[#466677] tabular-nums">
-                      {progress.percent !== null
-                        ? `${progress.percent}%`
-                        : "Working"}
-                    </span>
-                  </div>
-
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#D4DDE2]">
-                    {progress.percent !== null ? (
-                      <div
-                        className="h-full rounded-full bg-[#1CC8A0] transition-all duration-150"
-                        style={{ width: `${progress.percent}%` }}
-                      />
-                    ) : (
-                      <div className="h-full w-1/3 rounded-full bg-[#426579] animate-binro-indeterminate" />
-                    )}
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleCancelSplit}
-                      className="min-h-[36px] rounded-md px-2 text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+                <ToolProgressCard
+                  stageLabel={STAGE_LABELS[progress.stage]}
+                  detail={progress.detail}
+                  percent={progress.percent}
+                  onCancel={handleCancelSplit}
+                />
               ) : null}
 
               {/* Action Bar */}
@@ -1169,34 +1280,32 @@ export function PdfSplitter() {
                   disabled={!canStartSplit}
                   className="min-h-[46px] flex-1 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
                 >
-                  {isSplitting ? "Splitting PDF..." : "Split PDF"}
+                  {isSplitting
+                    ? "Splitting PDF..."
+                    : splitMode === "extract"
+                      ? "Create extracted PDF"
+                      : "Split PDF"}
                 </button>
               </div>
             </form>
 
-            {/* Right Column: Plan Preview OR Ready Downloads */}
+            {/* Right Column: Live Output Preview OR Ready Downloads */}
             <aside
-              aria-label="Split plan and downloads"
+              aria-label="Output plan and downloads"
               className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-5"
             >
               {resultState && !isSplitting ? (
                 <div aria-live="polite" className="space-y-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="inline-flex items-center gap-2">
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[#EAFBF6] text-[#0E6B56]">
-                        <CheckIcon className="h-3.5 w-3.5" />
+                  <ToolResultHeader
+                    title="Your split files are ready"
+                    rightContent={
+                      <span className="font-mono text-xs text-[#556168] tabular-nums">
+                        {resultState.outputs.length}{" "}
+                        {resultState.outputs.length === 1 ? "file" : "files"}
                       </span>
-                      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#0E6B56]">
-                        Split ready
-                      </p>
-                    </div>
-                    <span className="font-mono text-xs text-[#556168] tabular-nums">
-                      {resultState.outputs.length}{" "}
-                      {resultState.outputs.length === 1 ? "file" : "files"}
-                    </span>
-                  </div>
+                    }
+                  />
 
-                  {/* Primary Download CTA */}
                   <div className="space-y-2.5">
                     {resultState.outputs.length > 1 &&
                     resultState.zipUrl &&
@@ -1244,10 +1353,9 @@ export function PdfSplitter() {
                     </button>
                   </div>
 
-                  {/* Output Files List */}
                   <div className="space-y-2 border-t border-[#D4DDE2] pt-4">
                     <p className="text-xs font-medium text-[#466677]">
-                      Generated files
+                      Individual files
                     </p>
                     <ul className="max-h-[340px] divide-y divide-[#D4DDE2] overflow-y-auto rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/40">
                       {resultState.outputs.map((item) => (
@@ -1287,45 +1395,60 @@ export function PdfSplitter() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="text-sm font-semibold text-[#20272B]">
-                      Output preview
+                      What will be created
                     </h2>
                     {planPreview?.ok ? (
                       <span className="font-mono text-xs text-[#426579] tabular-nums">
                         {planPreview.plans.length}{" "}
-                        {planPreview.plans.length === 1 ? "file" : "files"}
+                        {planPreview.plans.length === 1 ? "PDF" : "PDFs"}
                       </span>
                     ) : null}
                   </div>
 
                   {planPreview?.ok ? (
-                    <ul className="max-h-[320px] divide-y divide-[#D4DDE2] overflow-y-auto rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/40">
-                      {planPreview.plans.slice(0, 50).map((plan) => (
-                        <li
-                          key={plan.id}
-                          className="flex items-center justify-between gap-3 bg-white/80 px-3.5 py-2.5"
-                        >
-                          <p
-                            title={plan.filename}
-                            className="min-w-0 truncate font-mono text-xs font-medium text-[#20272B]"
+                    <>
+                      <ul className="max-h-[320px] divide-y divide-[#D4DDE2] overflow-y-auto rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/40">
+                        {planPreview.plans.slice(0, 50).map((plan) => (
+                          <li
+                            key={plan.id}
+                            className="flex items-center justify-between gap-3 bg-white/85 px-3.5 py-2.5"
                           >
-                            {plan.filename}
-                          </p>
-                          <span className="shrink-0 font-mono text-xs text-[#556168] tabular-nums">
-                            {plan.pages.length}{" "}
-                            {plan.pages.length === 1 ? "page" : "pages"}
-                          </span>
-                        </li>
-                      ))}
-                      {planPreview.plans.length > 50 ? (
-                        <li className="px-3.5 py-2.5 text-center font-mono text-xs text-[#466677] tabular-nums">
-                          + {planPreview.plans.length - 50} more files
-                        </li>
+                            <div className="min-w-0 flex-1">
+                              <p
+                                title={plan.filename}
+                                className="truncate font-mono text-xs font-medium text-[#20272B]"
+                              >
+                                {plan.filename}
+                              </p>
+                              <p className="mt-0.5 text-[11px] text-[#556168]">
+                                {plan.rangeLabel}
+                              </p>
+                            </div>
+                            <span className="shrink-0 font-mono text-xs text-[#466677] tabular-nums">
+                              {plan.pages.length}{" "}
+                              {plan.pages.length === 1 ? "pg" : "pgs"}
+                            </span>
+                          </li>
+                        ))}
+                        {planPreview.plans.length > 50 ? (
+                          <li className="px-3.5 py-2.5 text-center font-mono text-xs text-[#466677] tabular-nums">
+                            + {planPreview.plans.length - 50} more files
+                          </li>
+                        ) : null}
+                      </ul>
+
+                      {planPreview.plans.length > 1 ? (
+                        <p className="text-xs text-[#556168]">
+                          Multiple files will be packaged into a convenient ZIP
+                          download, with individual file buttons too.
+                        </p>
                       ) : null}
-                    </ul>
+                    </>
                   ) : (
-                    <div className="rounded-xl border border-dashed border-[#D4DDE2] bg-[#F3F6F7]/40 px-4 py-8 text-center text-xs text-[#556168]">
-                      Enter valid page numbers or ranges to preview your output
-                      PDF files.
+                    <div className="rounded-xl border border-dashed border-[#D4DDE2] bg-[#F3F6F7]/40 px-4 py-8 text-center text-xs leading-relaxed text-[#556168]">
+                      {splitMode === "extract"
+                        ? "Click page tiles on the left or type page numbers to see the PDF that will be created."
+                        : "Enter valid page ranges on the left to preview your output PDF files."}
                     </div>
                   )}
                 </div>
@@ -1335,13 +1458,7 @@ export function PdfSplitter() {
         </div>
       )}
 
-      {/* Quiet Privacy Line */}
-      <div className="flex items-center justify-between pt-1">
-        <p className="inline-flex items-center gap-2 text-xs text-[#556168]">
-          <LockIcon className="h-3.5 w-3.5 text-[#466677]" />
-          <span>Your files are processed locally in your browser.</span>
-        </p>
-      </div>
+      <ToolPrivacyNote text="Your PDF stays on your device and is split locally in your browser." />
     </div>
   );
 }

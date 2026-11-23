@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type SVGProps } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   compressPdfFileInBrowser,
   inspectPdfFileInBrowser,
@@ -17,6 +17,19 @@ import {
   type CompressionStage,
   type PdfInspectionResult,
 } from "@/lib/pdf/pdf-compression";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  DownloadIcon,
+  PdfDocumentIcon,
+} from "@/components/ui/Icons";
+import {
+  ToolErrorBanner,
+  ToolPrivacyNote,
+  ToolProgressCard,
+  ToolResultHeader,
+  ToolUploadDropzone,
+} from "@/components/utilities/ToolUI";
 
 const STAGE_LABELS: Record<CompressionStage, string> = {
   reading: "Reading",
@@ -27,110 +40,20 @@ const STAGE_LABELS: Record<CompressionStage, string> = {
   verifying: "Verifying PDF",
 };
 
-function PdfDocumentIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M14 3.5H7.5A2 2 0 0 0 5.5 5.5v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8.5L14 3.5Z" />
-      <path d="M14 3.5v5h4.5" />
-      <path d="M9 13h6" />
-      <path d="M9 16.5h4" />
-    </svg>
-  );
-}
-
-function LockIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <rect x="4.5" y="9" width="11" height="7.5" rx="1.75" />
-      <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
-    </svg>
-  );
-}
-
-function DownloadIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M10 3.5v9.5" />
-      <path d="m6.5 9.5 3.5 3.5 3.5-3.5" />
-      <path d="M4 15.5h12" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
-    </svg>
-  );
-}
-
-function CheckIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.85}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5 10.5 3.5 3.5 6.5-7.5" />
-    </svg>
-  );
-}
-
 interface TargetPreset {
   label: string;
+  hint: string;
   value: number;
   unit: "KB" | "MB";
   bytes: number;
 }
 
 const TARGET_PRESETS: TargetPreset[] = [
-  { label: "100 KB", value: 100, unit: "KB", bytes: 100 * 1024 },
-  { label: "200 KB", value: 200, unit: "KB", bytes: 200 * 1024 },
-  { label: "300 KB", value: 300, unit: "KB", bytes: 300 * 1024 },
-  { label: "500 KB", value: 500, unit: "KB", bytes: 500 * 1024 },
-  { label: "1 MB", value: 1, unit: "MB", bytes: 1024 * 1024 },
+  { label: "100 KB", hint: "Forms", value: 100, unit: "KB", bytes: 100 * 1024 },
+  { label: "200 KB", hint: "Portals", value: 200, unit: "KB", bytes: 200 * 1024 },
+  { label: "300 KB", hint: "Uploads", value: 300, unit: "KB", bytes: 300 * 1024 },
+  { label: "500 KB", hint: "Reports", value: 500, unit: "KB", bytes: 500 * 1024 },
+  { label: "1 MB", hint: "Email", value: 1, unit: "MB", bytes: 1024 * 1024 },
 ];
 
 interface LoadedPdfState {
@@ -349,7 +272,7 @@ export function PdfCompressor() {
 
       if (targetBytes >= loadedPdf.sizeBytes) {
         setErrorMessage(
-          `Your PDF (${formatPdfBytes(loadedPdf.sizeBytes)}) is already within ${formatPdfBytes(targetBytes)}. Choose a smaller target or use Recommended mode.`
+          `Your PDF (${formatPdfBytes(loadedPdf.sizeBytes)}) is already smaller than ${formatPdfBytes(targetBytes)}. Choose a smaller target or use Recommended mode.`
         );
         return;
       }
@@ -413,7 +336,7 @@ export function PdfCompressor() {
       setAnnouncement(
         output.alreadyOptimized
           ? "PDF is already optimised. Original file preserved."
-          : `Compressed PDF ready: ${formatPdfBytes(output.outputSizeBytes)}, reduced by ${output.percentReduction}%.`
+          : `Compression complete: ${formatPdfBytes(output.outputSizeBytes)}, reduced by ${output.percentReduction}%.`
       );
     } catch (error) {
       if (sessionIdRef.current !== currentSession) {
@@ -464,6 +387,21 @@ export function PdfCompressor() {
         null
       : null;
 
+  const compressedBarPercent =
+    resultState && resultState.output.originalSizeBytes > 0
+      ? Math.max(
+          6,
+          Math.min(
+            100,
+            Math.round(
+              (resultState.output.outputSizeBytes /
+                resultState.output.originalSizeBytes) *
+                100
+            )
+          )
+        )
+      : 100;
+
   return (
     <div className="mx-auto max-w-[1040px] space-y-5">
       <input
@@ -479,36 +417,19 @@ export function PdfCompressor() {
         {announcement}
       </div>
 
-      {errorMessage ? (
-        <div
-          role="alert"
-          className="flex flex-col gap-3 rounded-xl border border-[#B44A4A]/40 bg-[#FDF5F5] px-4 py-3 text-sm text-[#7A2727] sm:flex-row sm:items-center sm:justify-between"
-        >
-          <span>{errorMessage}</span>
-          <div className="flex shrink-0 items-center gap-2">
-            {loadedPdf && !isCompressing ? (
-              <button
-                type="button"
-                onClick={() => void runCompression()}
-                className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1.5 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
-              >
-                Try again
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setErrorMessage(null)}
-              className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1.5 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <ToolErrorBanner
+        messages={errorMessage ? [errorMessage] : []}
+        onDismiss={() => setErrorMessage(null)}
+        onRetry={loadedPdf && !isCompressing ? () => void runCompression() : undefined}
+      />
 
       {!loadedPdf ? (
-        /* Initial Clean Upload Dropzone */
-        <div
+        <ToolUploadDropzone
+          icon={<PdfDocumentIcon className="h-6 w-6" />}
+          buttonLabel="Choose a PDF file"
+          busyLabel="Reading PDF..."
+          isBusy={isInspecting}
+          isDragging={isDragging}
           onDragOver={(event) => {
             event.preventDefault();
             setIsDragging(true);
@@ -519,46 +440,22 @@ export function PdfCompressor() {
             }
           }}
           onDrop={handleDrop}
-          className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
-        >
-          <div
-            className={`flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-150 sm:min-h-[300px] sm:py-12 ${
-              isDragging
-                ? "border-[#426579] bg-[#F3F6F7]"
-                : "border-[#D4DDE2] bg-[#F3F6F7]/50 hover:border-[#5C7E8F]"
-            }`}
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#466677]">
-              <PdfDocumentIcon className="h-6 w-6" />
-            </div>
-
-            <button
-              type="button"
-              disabled={isInspecting}
-              onClick={() => fileInputRef.current?.click()}
-              className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#426579] px-6 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
-            >
-              {isInspecting ? "Reading PDF..." : "Choose PDF"}
-            </button>
-
-            <p className="mt-3 text-sm text-[#556168]">or drop it here</p>
-            <p className="mt-4 text-xs text-[#466677]">
-              PDF documents up to{" "}
-              {Math.round(MAX_PDF_INPUT_BYTES / (1024 * 1024))} MB
-            </p>
-          </div>
-        </div>
+          onButtonClick={() => fileInputRef.current?.click()}
+          helperText="or drop a PDF document here"
+          supportText={`Keep text searchable while reducing size · up to ${Math.round(
+            MAX_PDF_INPUT_BYTES / (1024 * 1024)
+          )} MB`}
+        />
       ) : (
-        /* Document Summary + Compression Controls Workspace */
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
-          {/* Document Details & Result Card */}
+          {/* Document Summary + Visual Size Comparison */}
           <section
-            aria-label="Document summary and compression result"
+            aria-label="Document summary and compression comparison"
             className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-6"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F3F6F7] text-[#426579]">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D4DDE2] bg-[#F3F6F7] text-[#426579]">
                   <PdfDocumentIcon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
@@ -569,7 +466,7 @@ export function PdfCompressor() {
                     {loadedPdf.name}
                   </p>
                   <p className="mt-0.5 text-xs text-[#556168]">
-                    PDF document
+                    Ready to compress
                   </p>
                 </div>
               </div>
@@ -579,14 +476,14 @@ export function PdfCompressor() {
                   type="button"
                   disabled={isCompressing}
                   onClick={() => fileInputRef.current?.click()}
-                  className="min-h-[44px] rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
+                  className="min-h-[42px] rounded-xl border border-[#D4DDE2] bg-white px-3.5 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   Replace
                 </button>
                 <button
                   type="button"
                   onClick={handleRemoveFile}
-                  className="min-h-[44px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
+                  className="min-h-[42px] rounded-xl px-3 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   Remove
                 </button>
@@ -596,19 +493,19 @@ export function PdfCompressor() {
             <dl className="grid grid-cols-3 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs">
               <div>
                 <dt className="text-[#466677]">Original size</dt>
-                <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
+                <dd className="mt-0.5 font-mono text-sm font-medium text-[#20272B] tabular-nums">
                   {formatPdfBytes(loadedPdf.sizeBytes)}
                 </dd>
               </div>
               <div>
                 <dt className="text-[#466677]">Pages</dt>
-                <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
+                <dd className="mt-0.5 font-mono text-sm font-medium text-[#20272B] tabular-nums">
                   {loadedPdf.inspection.pageCount}
                 </dd>
               </div>
               <div>
-                <dt className="text-[#466677]">Images</dt>
-                <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
+                <dt className="text-[#466677]">Embedded images</dt>
+                <dd className="mt-0.5 font-mono text-sm font-medium text-[#20272B] tabular-nums">
                   {loadedPdf.inspection.imageCount}
                 </dd>
               </div>
@@ -617,54 +514,30 @@ export function PdfCompressor() {
             {loadedPdf.inspection.hasDigitalSignature ? (
               <p className="rounded-xl border border-[#B47A3C]/40 bg-[#FDF9F3] px-3.5 py-2.5 text-xs leading-relaxed text-[#5D3D1A]">
                 This PDF contains a digital signature. Compressing or rewriting
-                a signed PDF can invalidate its signature.
+                a signed document can invalidate its cryptographic signature.
               </p>
             ) : null}
 
-            {/* Honest Progress Indicator */}
-            {isCompressing && progress ? (
-              <div
-                aria-live="polite"
-                className="space-y-2.5 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/65 p-4"
-              >
-                <div className="flex items-baseline justify-between gap-2 text-xs">
-                  <div className="min-w-0">
-                    <span className="font-semibold text-[#20272B]">
-                      {STAGE_LABELS[progress.stage]}
-                    </span>
-                    <span className="ml-2 text-[#556168]">
-                      {progress.detail}
-                    </span>
-                  </div>
-                  <span className="shrink-0 font-mono text-[#466677] tabular-nums">
-                    {progress.percent !== null
-                      ? `${progress.percent}%`
-                      : "Working"}
-                  </span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#D4DDE2]">
-                  {progress.percent !== null ? (
-                    <div
-                      className="h-full rounded-full bg-[#1CC8A0] transition-all duration-150"
-                      style={{ width: `${progress.percent}%` }}
-                    />
-                  ) : (
-                    <div className="h-full w-1/3 rounded-full bg-[#426579] animate-binro-indeterminate" />
-                  )}
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleCancelCompression}
-                    className="min-h-[36px] rounded-md px-2 text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+            {!resultState &&
+            !isCompressing &&
+            loadedPdf.inspection.optimizableImageCount === 0 ? (
+              <p className="rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/75 px-3.5 py-2.5 text-xs leading-relaxed text-[#556168]">
+                This PDF is mostly text or vector shapes rather than large
+                photos, so structural compression may only reduce the size
+                slightly.
+              </p>
             ) : null}
 
-            {/* Compression Result Summary */}
+            {isCompressing && progress ? (
+              <ToolProgressCard
+                stageLabel={STAGE_LABELS[progress.stage]}
+                detail={progress.detail}
+                percent={progress.percent}
+                onCancel={handleCancelCompression}
+              />
+            ) : null}
+
+            {/* Compression Result & Visual Size Comparison */}
             {resultState && !isCompressing ? (
               <div
                 aria-live="polite"
@@ -672,75 +545,77 @@ export function PdfCompressor() {
               >
                 {resultState.output.alreadyOptimized ? (
                   <div className="rounded-xl border border-[#D4DDE2] bg-[#F3F6F7] p-4 text-xs leading-relaxed text-[#20272B]">
-                    <p className="font-semibold">Already optimised</p>
+                    <p className="font-semibold">Already as compact as possible</p>
                     <p className="mt-1 text-[#556168]">
                       {resultState.output.note ??
-                        "This PDF could not be reduced further without sacrificing readability. Your original file was preserved."}
+                        "This PDF could not be reduced further without hurting readability, so your original file was kept."}
                     </p>
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="inline-flex items-center gap-2">
-                        {isResultCurrent ? (
-                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[#EAFBF6] text-[#0E6B56]">
-                            <CheckIcon className="h-3.5 w-3.5" />
-                          </span>
-                        ) : null}
-                        <p
-                          className={`text-xs font-semibold uppercase tracking-[0.06em] ${
-                            isResultCurrent
-                              ? "text-[#0E6B56]"
-                              : "text-[#466677]"
-                          }`}
-                        >
-                          {isResultCurrent
-                            ? "Compressed PDF ready"
-                            : "Previous result"}
-                        </p>
-                      </div>
-                      <span className="font-mono text-xs font-medium text-[#426579] tabular-nums">
-                        −{resultState.output.percentReduction}%
-                      </span>
-                    </div>
+                    <ToolResultHeader
+                      title={
+                        isResultCurrent
+                          ? "Compression complete"
+                          : "Showing previous result — compress again to update"
+                      }
+                      isCurrent={isResultCurrent}
+                      rightContent={
+                        <span className="font-mono text-xs font-semibold text-[#0E6B56] tabular-nums">
+                          {resultState.output.percentReduction}% smaller
+                        </span>
+                      }
+                    />
 
-                    <dl className="grid grid-cols-2 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs sm:grid-cols-4">
-                      <div>
-                        <dt className="text-[#466677]">Original</dt>
-                        <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
-                          {formatPdfBytes(resultState.output.originalSizeBytes)}
-                        </dd>
+                    {/* Visual Original vs Compressed Comparison Bar */}
+                    <div className="space-y-2.5 rounded-xl bg-[#F3F6F7] p-4 text-xs">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[#556168]">
+                          <span>Original</span>
+                          <span className="font-mono font-medium text-[#20272B] tabular-nums">
+                            {formatPdfBytes(
+                              resultState.output.originalSizeBytes
+                            )}
+                          </span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-[#D4DDE2]">
+                          <div className="h-full w-full rounded-full bg-[#5C7E8F]/45" />
+                        </div>
                       </div>
-                      <div>
-                        <dt className="text-[#466677]">New size</dt>
-                        <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
-                          {formatPdfBytes(resultState.output.outputSizeBytes)}
-                        </dd>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[#20272B]">
+                          <span className="font-medium">Compressed</span>
+                          <span className="font-mono font-semibold text-[#0E6B56] tabular-nums">
+                            {formatPdfBytes(resultState.output.outputSizeBytes)}{" "}
+                            <span className="font-normal text-[#556168]">
+                              (saved{" "}
+                              {formatPdfBytes(resultState.output.bytesSaved)})
+                            </span>
+                          </span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-[#D4DDE2]">
+                          <div
+                            className="h-full rounded-full bg-[#1CC8A0] transition-all duration-200"
+                            style={{ width: `${compressedBarPercent}%` }}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <dt className="text-[#466677]">Saved</dt>
-                        <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
-                          {formatPdfBytes(resultState.output.bytesSaved)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-[#466677]">Reduction</dt>
-                        <dd className="mt-0.5 font-mono font-medium text-[#20272B] tabular-nums">
-                          {resultState.output.percentReduction}%
-                        </dd>
-                      </div>
-                    </dl>
+                    </div>
 
                     <p className="truncate text-xs text-[#556168]">
                       Output:{" "}
-                      <span className="font-mono text-[#20272B]">
+                      <span
+                        title={resultState.filename}
+                        className="font-mono text-[#20272B]"
+                      >
                         {resultState.filename}
                       </span>
                     </p>
 
                     {resultState.output.targetSizeBytes !== null &&
                     !resultState.output.targetMet ? (
-                      <div className="space-y-2 rounded-xl border border-[#B47A3C]/40 bg-[#FDF9F3] p-3.5 text-xs leading-relaxed text-[#5D3D1A]">
+                      <div className="space-y-2.5 rounded-xl border border-[#B47A3C]/40 bg-[#FDF9F3] p-3.5 text-xs leading-relaxed text-[#5D3D1A]">
                         <p>{resultState.output.note}</p>
                         {nextGentlerPreset ? (
                           <button
@@ -751,16 +626,21 @@ export function PdfCompressor() {
                                 unit: nextGentlerPreset.unit,
                               })
                             }
-                            className="inline-flex min-h-[40px] items-center rounded-lg border border-[#B47A3C]/45 bg-white px-3 py-1 font-medium text-[#5D3D1A] transition-colors hover:bg-[#FDF5EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[36px]"
+                            className="inline-flex min-h-[40px] items-center rounded-lg border border-[#B47A3C]/45 bg-white px-3 py-1 font-medium text-[#5D3D1A] transition-colors hover:bg-[#FDF5EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                           >
                             Try {nextGentlerPreset.label} target
                           </button>
                         ) : null}
                       </div>
                     ) : resultState.output.targetSizeBytes !== null ? (
-                      <p className="text-xs text-[#426579]">
-                        Target met: within{" "}
-                        {formatPdfBytes(resultState.output.targetSizeBytes)}.
+                      <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0E6B56]">
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-[#EAFBF6] text-[#0E6B56]">
+                          <CheckIcon className="h-3 w-3" />
+                        </span>
+                        <span>
+                          Goal met: within{" "}
+                          {formatPdfBytes(resultState.output.targetSizeBytes)}
+                        </span>
                       </p>
                     ) : null}
                   </>
@@ -769,20 +649,20 @@ export function PdfCompressor() {
             ) : null}
           </section>
 
-          {/* Compression Controls Panel */}
+          {/* Compression Options Panel */}
           <form
             onSubmit={handleSubmit}
             className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-6"
           >
-            {/* Mode Switch */}
+            {/* Mode Cards */}
             <div className="space-y-2.5">
-              <p className="text-xs font-medium text-[#556168]">
-                Compression mode
+              <p className="text-xs font-semibold text-[#20272B]">
+                Choose how to compress
               </p>
               <div
                 role="group"
                 aria-label="Compression mode"
-                className="grid grid-cols-2 gap-1 rounded-xl bg-[#F3F6F7] p-1"
+                className="grid grid-cols-1 gap-2.5 sm:grid-cols-2"
               >
                 <button
                   type="button"
@@ -792,14 +672,27 @@ export function PdfCompressor() {
                     setIsResultCurrent(false);
                     setErrorMessage(null);
                   }}
-                  className={`min-h-[38px] rounded-lg px-3 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                  className={`flex min-h-[76px] flex-col items-start justify-between rounded-xl border p-3.5 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                     mode === "recommended"
-                      ? "bg-white text-[#20272B] shadow-xs"
-                      : "text-[#556168] hover:text-[#20272B]"
+                      ? "border-[#426579] bg-[#F3F6F7] shadow-[inset_0_0_0_1px_#426579]"
+                      : "border-[#D4DDE2] bg-white hover:border-[#5C7E8F]"
                   }`}
                 >
-                  Recommended
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-[#20272B]">
+                      Recommended
+                    </span>
+                    {mode === "recommended" ? (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[#426579] text-white">
+                        <CheckIcon className="h-3 w-3" />
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="mt-1 text-xs leading-snug text-[#556168]">
+                    Smaller file size while keeping text crisp and readable.
+                  </span>
                 </button>
+
                 <button
                   type="button"
                   aria-pressed={mode === "target"}
@@ -808,27 +701,34 @@ export function PdfCompressor() {
                     setIsResultCurrent(false);
                     setErrorMessage(null);
                   }}
-                  className={`min-h-[38px] rounded-lg px-3 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                  className={`flex min-h-[76px] flex-col items-start justify-between rounded-xl border p-3.5 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                     mode === "target"
-                      ? "bg-white text-[#20272B] shadow-xs"
-                      : "text-[#556168] hover:text-[#20272B]"
+                      ? "border-[#426579] bg-[#F3F6F7] shadow-[inset_0_0_0_1px_#426579]"
+                      : "border-[#D4DDE2] bg-white hover:border-[#5C7E8F]"
                   }`}
                 >
-                  Target file size
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-[#20272B]">
+                      Target file size
+                    </span>
+                    {mode === "target" ? (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[#426579] text-white">
+                        <CheckIcon className="h-3 w-3" />
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="mt-1 text-xs leading-snug text-[#556168]">
+                    Aim for a specific KB or MB upload limit.
+                  </span>
                 </button>
               </div>
             </div>
 
-            {mode === "recommended" ? (
-              <p className="text-xs leading-relaxed text-[#556168]">
-                Balances smaller file size with crisp readability while
-                preserving selectable text, vector graphics, and links.
-              </p>
-            ) : (
+            {mode === "target" ? (
               <div className="space-y-3 border-t border-[#D4DDE2]/80 pt-5">
                 <label
                   htmlFor="target-pdf-size"
-                  className="block text-xs font-medium text-[#556168]"
+                  className="block text-xs font-semibold text-[#20272B]"
                 >
                   Maximum target size
                 </label>
@@ -847,13 +747,13 @@ export function PdfCompressor() {
                       setIsResultCurrent(false);
                       setErrorMessage(null);
                     }}
-                    className="min-h-[42px] flex-1 rounded-lg border border-[#D4DDE2] bg-white px-3 py-2 font-mono text-sm text-[#20272B] tabular-nums focus:border-[#5C7E8F] focus:outline-none focus:ring-2 focus:ring-[#5C7E8F]/30"
+                    className="min-h-[44px] flex-1 rounded-xl border border-[#D4DDE2] bg-white px-3 py-2 font-mono text-sm text-[#20272B] tabular-nums focus:border-[#5C7E8F] focus:outline-none focus:ring-2 focus:ring-[#5C7E8F]/30"
                   />
 
                   <div
                     role="group"
                     aria-label="Target size unit"
-                    className="grid grid-cols-2 gap-1 rounded-lg bg-[#F3F6F7] p-1"
+                    className="grid grid-cols-2 gap-1 rounded-xl bg-[#F3F6F7] p-1"
                   >
                     {(["KB", "MB"] as const).map((unit) => (
                       <button
@@ -882,7 +782,7 @@ export function PdfCompressor() {
                           setIsResultCurrent(false);
                           setErrorMessage(null);
                         }}
-                        className={`min-h-[34px] rounded-md px-3 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                        className={`min-h-[36px] rounded-lg px-3.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                           targetUnit === unit
                             ? "bg-white text-[#20272B] shadow-xs"
                             : "text-[#556168] hover:text-[#20272B]"
@@ -910,26 +810,35 @@ export function PdfCompressor() {
                           setIsResultCurrent(false);
                           setErrorMessage(null);
                         }}
-                        className={`min-h-[36px] rounded-lg px-2.5 py-1 font-mono text-xs font-medium tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                        className={`min-h-[38px] rounded-lg px-2.5 py-1 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
                           isSelected
                             ? "bg-[#426579] text-white"
                             : "bg-[#F3F6F7] text-[#20272B] hover:bg-[#D4DDE2]/70"
                         }`}
                       >
-                        {preset.label}
+                        <span className="font-mono text-xs font-medium tabular-nums">
+                          {preset.label}
+                        </span>
+                        <span
+                          className={`ml-1.5 text-[11px] ${
+                            isSelected ? "text-white/80" : "text-[#556168]"
+                          }`}
+                        >
+                          · {preset.hint}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
 
-                <p className="text-xs leading-relaxed text-[#466677]">
-                  Target sizes are best-effort goals. Achievable size depends on
-                  document text, fonts, and embedded images.
+                <p className="text-xs leading-relaxed text-[#556168]">
+                  BinRo runs multiple quality passes to stay under your target
+                  while keeping text sharp and legible.
                 </p>
               </div>
-            )}
+            ) : null}
 
-            {/* Discreet Expandable Advanced Settings */}
+            {/* Advanced Settings */}
             <div className="border-t border-[#D4DDE2]/80 pt-3">
               <button
                 type="button"
@@ -949,7 +858,7 @@ export function PdfCompressor() {
               {showAdvanced ? (
                 <div
                   id="pdf-advanced-settings"
-                  className="mt-3 space-y-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs"
+                  className="mt-2.5 space-y-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs"
                 >
                   <label className="flex cursor-pointer items-start gap-2.5 text-[#20272B]">
                     <input
@@ -962,7 +871,7 @@ export function PdfCompressor() {
                       className="mt-0.5 h-4 w-4 rounded border-[#D4DDE2] accent-[#426579]"
                     />
                     <span>
-                      Remove embedded page thumbnails and XML metadata
+                      Remove embedded page thumbnails and optional metadata
                     </span>
                   </label>
 
@@ -977,7 +886,7 @@ export function PdfCompressor() {
                       className="mt-0.5 h-4 w-4 rounded border-[#D4DDE2] accent-[#426579]"
                     />
                     <span>
-                      Keep original image dimensions (quality-only compression)
+                      Keep original image resolution (quality-only compression)
                     </span>
                   </label>
                 </div>
@@ -1000,16 +909,16 @@ export function PdfCompressor() {
                     <button
                       type="submit"
                       disabled={isCompressing}
-                      className="min-h-[40px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2 text-xs font-medium text-[#20272B] transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                      className="min-h-[42px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2 text-xs font-medium text-[#20272B] transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                     >
                       Compress again
                     </button>
                     <button
                       type="button"
                       onClick={handleReset}
-                      className="min-h-[40px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2 text-xs font-medium text-[#556168] transition-colors duration-150 hover:border-[#5C7E8F] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                      className="min-h-[42px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2 text-xs font-medium text-[#556168] transition-colors duration-150 hover:border-[#5C7E8F] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                     >
-                      Reset
+                      Start over
                     </button>
                   </div>
                 </>
@@ -1027,7 +936,7 @@ export function PdfCompressor() {
                     onClick={handleReset}
                     className="min-h-[44px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2.5 text-sm font-medium text-[#556168] transition-colors duration-150 hover:border-[#5C7E8F] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                   >
-                    Reset
+                    Start over
                   </button>
                 </div>
               )}
@@ -1036,13 +945,7 @@ export function PdfCompressor() {
         </div>
       )}
 
-      {/* Quiet Privacy Line */}
-      <div className="flex items-center justify-between pt-1">
-        <p className="inline-flex items-center gap-2 text-xs text-[#556168]">
-          <LockIcon className="h-3.5 w-3.5 shrink-0 text-[#466677]" />
-          <span>Your files stay on your device.</span>
-        </p>
-      </div>
+      <ToolPrivacyNote text="Your PDFs stay on your device and are processed locally in your browser." />
     </div>
   );
 }

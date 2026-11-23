@@ -1,36 +1,16 @@
 "use client";
 
-import { useState, type SVGProps } from "react";
+import {
+  ToolHelpAccordion,
+  type ToolHelpItem,
+} from "@/components/utilities/ToolUI";
 
-function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
-    </svg>
-  );
-}
-
-interface HelpItem {
-  id: string;
-  question: string;
-  answer: string;
-}
-
-const HELP_ITEMS: HelpItem[] = [
+const HELP_ITEMS: ToolHelpItem[] = [
   {
     id: "how-to-resize",
     question: "How to resize an image for forms or uploads",
     answer:
-      "Choose or drop a JPG, PNG, or WebP image. Enter the exact width or height in pixels—keeping Maintain aspect ratio checked prevents stretching—and select Resize image. Useful for passport photos, scanned signatures, ID proofs, and web assets.",
+      "Choose or drop a JPG, PNG, or WebP image. Enter the exact width or height in pixels—keeping the aspect ratio locked prevents stretching—or pick a quick scale percentage, then select Resize image.",
   },
   {
     id: "how-to-reduce",
@@ -59,43 +39,5 @@ const HELP_ITEMS: HelpItem[] = [
 ];
 
 export function ImageResizerHelp() {
-  const [openId, setOpenId] = useState<string | null>(null);
-
-  return (
-    <div className="mx-auto max-w-[1040px]">
-      <h2 className="text-sm font-medium text-[#466677]">Help & reference</h2>
-      <div className="mt-3 divide-y divide-[#D4DDE2] rounded-2xl border border-[#D4DDE2] bg-white">
-        {HELP_ITEMS.map((item) => {
-          const isOpen = openId === item.id;
-
-          return (
-            <div key={item.id}>
-              <button
-                type="button"
-                aria-expanded={isOpen}
-                aria-controls={`help-panel-${item.id}`}
-                onClick={() => setOpenId(isOpen ? null : item.id)}
-                className="flex min-h-[48px] w-full items-center justify-between gap-4 px-5 py-3.5 text-left text-sm font-medium text-[#20272B] transition-colors hover:bg-[#F3F6F7]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#5C7E8F]"
-              >
-                <span>{item.question}</span>
-                <ChevronDownIcon
-                  className={`h-4 w-4 shrink-0 text-[#466677] transition-transform duration-150 ${
-                    isOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              {isOpen ? (
-                <div
-                  id={`help-panel-${item.id}`}
-                  className="max-w-[68ch] px-5 pb-4 text-sm leading-relaxed text-[#556168] text-pretty"
-                >
-                  {item.answer}
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  return <ToolHelpAccordion idPrefix="help-panel" items={HELP_ITEMS} />;
 }

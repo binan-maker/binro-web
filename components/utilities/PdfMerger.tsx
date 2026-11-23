@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type SVGProps } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   inspectMergePdfFileInBrowser,
   mergePdfFilesInBrowser,
@@ -16,167 +16,22 @@ import {
   validateMergeFileMetadata,
   type MergeProgress,
 } from "@/lib/pdf/pdf-merge";
-
-function PdfDocumentIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M14 3.5H7.5A2 2 0 0 0 5.5 5.5v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8.5L14 3.5Z" />
-      <path d="M14 3.5v5h4.5" />
-      <path d="M9 13h6" />
-      <path d="M9 16.5h4" />
-    </svg>
-  );
-}
-
-function LockIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <rect x="4.5" y="9" width="11" height="7.5" rx="1.75" />
-      <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
-    </svg>
-  );
-}
-
-function DownloadIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M10 3.5v9.5" />
-      <path d="m6.5 9.5 3.5 3.5 3.5-3.5" />
-      <path d="M4 15.5h12" />
-    </svg>
-  );
-}
-
-function ChevronUpIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5.5 12.5 4.5-4.5 4.5 4.5" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
-    </svg>
-  );
-}
-
-function CloseIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5.5 5.5 9 9" />
-      <path d="m14.5 5.5-9 9" />
-    </svg>
-  );
-}
-
-function GripIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      aria-hidden="true"
-      {...props}
-    >
-      <circle cx="7" cy="5.5" r="1.2" />
-      <circle cx="13" cy="5.5" r="1.2" />
-      <circle cx="7" cy="10" r="1.2" />
-      <circle cx="13" cy="10" r="1.2" />
-      <circle cx="7" cy="14.5" r="1.2" />
-      <circle cx="13" cy="14.5" r="1.2" />
-    </svg>
-  );
-}
-
-function PlusIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M10 4.5v11" />
-      <path d="M4.5 10h11" />
-    </svg>
-  );
-}
-
-function CheckIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.85}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="m5 10.5 3.5 3.5 6.5-7.5" />
-    </svg>
-  );
-}
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CloseIcon,
+  DownloadIcon,
+  GripIcon,
+  PdfDocumentIcon,
+  PlusIcon,
+} from "@/components/ui/Icons";
+import {
+  ToolErrorBanner,
+  ToolPrivacyNote,
+  ToolProgressCard,
+  ToolResultHeader,
+  ToolUploadDropzone,
+} from "@/components/utilities/ToolUI";
 
 interface QueuedPdfFile {
   id: string;
@@ -290,7 +145,7 @@ export function PdfMerger() {
 
         const quickKey = `${file.name}::${file.size}::${file.lastModified}`;
         if (seenKeys.has(quickKey)) {
-          errors.push(`"${file.name}" is already in your merge list.`);
+          errors.push(`"${file.name}" is already in your document queue.`);
           continue;
         }
 
@@ -316,7 +171,7 @@ export function PdfMerger() {
 
           if (seenFingerprints.has(inspection.fingerprint)) {
             errors.push(
-              `"${file.name}" matches a PDF that is already in your list.`
+              `"${file.name}" matches a PDF that is already in your queue.`
             );
             continue;
           }
@@ -382,7 +237,6 @@ export function PdfMerger() {
   const handleUploadDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDraggingUpload(false);
-    // Ignore internal list item reordering drops or drops while busy
     if (draggedItemId || isInspectingRef.current || isInspecting || isMerging) {
       return;
     }
@@ -460,7 +314,7 @@ export function PdfMerger() {
     if (isMerging || isInspecting) return;
 
     if (queuedFiles.length < 2) {
-      setErrorMessages(["Select at least two valid PDF files to merge."]);
+      setErrorMessages(["Add at least two valid PDF files to merge."]);
       return;
     }
 
@@ -477,7 +331,7 @@ export function PdfMerger() {
     setProgress({
       stage: "merging",
       percent: 0,
-      detail: `Preparing ${queuedFiles.length} PDF files`,
+      detail: `Combining ${queuedFiles.length} PDF files`,
     });
 
     const job = mergePdfFilesInBrowser(
@@ -520,7 +374,7 @@ export function PdfMerger() {
       });
       setIsResultCurrent(true);
       setAnnouncement(
-        `Merged ${output.fileCount} files into ${output.totalPages} pages.`
+        `Your merged PDF is ready: ${output.fileCount} files combined into ${output.totalPages} pages.`
       );
     } catch (error) {
       if (sessionIdRef.current !== currentSession) {
@@ -603,29 +457,18 @@ export function PdfMerger() {
         {announcement}
       </div>
 
-      {errorMessages.length > 0 ? (
-        <div
-          role="alert"
-          className="flex flex-col gap-3 rounded-xl border border-[#B44A4A]/40 bg-[#FDF5F5] px-4 py-3 text-sm text-[#7A2727] sm:flex-row sm:items-start sm:justify-between"
-        >
-          <ul className="space-y-1">
-            {errorMessages.map((msg, idx) => (
-              <li key={`${idx}-${msg}`}>{msg}</li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            onClick={() => setErrorMessages([])}
-            className="inline-flex min-h-[36px] shrink-0 items-center justify-center rounded-lg border border-[#B44A4A]/35 bg-white px-3 py-1 text-xs font-medium text-[#7A2727] transition-colors hover:bg-[#FDF5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
-          >
-            Dismiss
-          </button>
-        </div>
-      ) : null}
+      <ToolErrorBanner
+        messages={errorMessages}
+        onDismiss={() => setErrorMessages([])}
+      />
 
       {queuedFiles.length === 0 ? (
-        /* Initial Clean Multi-File Upload Dropzone */
-        <div
+        <ToolUploadDropzone
+          icon={<PdfDocumentIcon className="h-6 w-6" />}
+          buttonLabel="Select PDF files"
+          busyLabel="Checking PDFs..."
+          isBusy={isInspecting}
+          isDragging={isDraggingUpload}
           onDragOver={(event) => {
             event.preventDefault();
             setIsDraggingUpload(true);
@@ -636,39 +479,11 @@ export function PdfMerger() {
             }
           }}
           onDrop={handleUploadDrop}
-          className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
-        >
-          <div
-            className={`flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-150 sm:min-h-[300px] sm:py-12 ${
-              isDraggingUpload
-                ? "border-[#426579] bg-[#F3F6F7]"
-                : "border-[#D4DDE2] bg-[#F3F6F7]/50 hover:border-[#5C7E8F]"
-            }`}
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4DDE2] bg-white text-[#466677]">
-              <PdfDocumentIcon className="h-6 w-6" />
-            </div>
-
-            <button
-              type="button"
-              disabled={isInspecting}
-              onClick={() => fileInputRef.current?.click()}
-              className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#426579] px-6 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
-            >
-              {isInspecting ? "Validating PDFs..." : "Select PDF files"}
-            </button>
-
-            <p className="mt-3 text-sm text-[#556168]">
-              or drop multiple PDFs here
-            </p>
-            <p className="mt-4 text-xs text-[#466677]">
-              Up to {MAX_MERGE_FILES} PDFs · {maxPerFileMb} MB per file ·{" "}
-              {maxTotalMb} MB total
-            </p>
-          </div>
-        </div>
+          onButtonClick={() => fileInputRef.current?.click()}
+          helperText="or drop multiple PDFs here to arrange them in order"
+          supportText={`Up to ${MAX_MERGE_FILES} PDFs · ${maxPerFileMb} MB per file · ${maxTotalMb} MB combined`}
+        />
       ) : (
-        /* Ordered File List + Merge Controls Workspace */
         <div
           onDragOver={(event) => {
             if (!draggedItemId) {
@@ -685,24 +500,24 @@ export function PdfMerger() {
             }
           }}
           onDrop={handleUploadDrop}
-          className={`grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8 rounded-2xl transition-colors ${
-            isDraggingUpload ? "ring-2 ring-[#5C7E8F]/40" : ""
+          className={`grid grid-cols-1 gap-6 rounded-2xl transition-colors lg:grid-cols-12 lg:items-start lg:gap-8 ${
+            isDraggingUpload ? "ring-2 ring-[#5C7E8F]/45" : ""
           }`}
         >
-          {/* Ordered PDF List */}
+          {/* Tactile Ordered Document Desk */}
           <section
-            aria-label="Selected PDF files in merge order"
+            aria-label="PDF document order"
             className="space-y-4 rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-7"
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold text-[#20272B]">
-                  Files to merge
+                  Document order (top to bottom)
                 </h2>
                 <p className="mt-0.5 font-mono text-xs text-[#466677] tabular-nums">
                   {queuedFiles.length}{" "}
-                  {queuedFiles.length === 1 ? "file" : "files"} · {totalPages}{" "}
-                  {totalPages === 1 ? "page" : "pages"} ·{" "}
+                  {queuedFiles.length === 1 ? "document" : "documents"} ·{" "}
+                  {totalPages} {totalPages === 1 ? "page" : "pages"} ·{" "}
                   {formatPdfBytes(totalBytes)}
                 </p>
               </div>
@@ -716,27 +531,34 @@ export function PdfMerger() {
                     queuedFiles.length >= MAX_MERGE_FILES
                   }
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#D4DDE2] bg-white px-3 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
+                  className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border border-[#D4DDE2] bg-white px-3.5 py-1.5 text-xs font-medium text-[#20272B] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   <PlusIcon className="h-3.5 w-3.5 text-[#466677]" />
-                  <span>{isInspecting ? "Adding..." : "Add PDFs"}</span>
+                  <span>{isInspecting ? "Adding..." : "Add more PDFs"}</span>
                 </button>
                 <button
                   type="button"
                   disabled={isMerging}
                   onClick={handleReset}
-                  className="min-h-[44px] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
+                  className="min-h-[42px] rounded-xl px-3 py-1.5 text-xs font-medium text-[#556168] transition-colors hover:bg-[#F3F6F7] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:min-h-[40px]"
                 >
                   Clear all
                 </button>
               </div>
             </div>
 
-            <ol className="divide-y divide-[#D4DDE2] rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/35">
+            <ol className="space-y-2.5">
               {queuedFiles.map((item, index) => {
                 const isDragTarget =
                   dragOverItemId === item.id && draggedItemId !== item.id;
                 const hasError = item.validationError !== null;
+                const positionNote =
+                  queuedFiles.length >= 2 && index === 0
+                    ? "First"
+                    : queuedFiles.length >= 2 &&
+                        index === queuedFiles.length - 1
+                      ? "Last"
+                      : null;
 
                 return (
                   <li
@@ -773,59 +595,71 @@ export function PdfMerger() {
                       setDraggedItemId(null);
                       setDragOverItemId(null);
                     }}
-                    className={`flex flex-col gap-2.5 px-3.5 py-3 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-3 ${
+                    className={`flex flex-col gap-3 rounded-xl border p-3 transition-colors sm:flex-row sm:items-center sm:justify-between sm:p-3.5 ${
                       hasError
-                        ? "bg-[#FDF5F5]"
+                        ? "border-[#B44A4A]/50 bg-[#FDF5F5]"
                         : isDragTarget
-                          ? "bg-[#E9EFF2]"
+                          ? "border-[#426579] bg-[#EAF0F3]"
                           : draggedItemId === item.id
-                            ? "opacity-60"
-                            : "bg-white/70 hover:bg-white"
+                            ? "border-[#D4DDE2] bg-white opacity-60"
+                            : "border-[#D4DDE2] bg-white hover:border-[#5C7E8F]/60"
                     }`}
                   >
-                    <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
                       <span
                         aria-hidden="true"
-                        className="hidden h-8 w-5 shrink-0 cursor-grab items-center justify-center text-[#556168] sm:inline-flex"
+                        className="hidden h-9 w-5 shrink-0 cursor-grab items-center justify-center text-[#556168] sm:inline-flex"
                       >
                         <GripIcon className="h-4 w-4" />
                       </span>
 
-                      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#F3F6F7] font-mono text-xs font-medium text-[#426579] tabular-nums sm:mt-0">
-                        {index + 1}
-                      </span>
+                      {/* Document Thumbnail Motif with Order Badge */}
+                      <div className="relative flex h-12 w-10 shrink-0 flex-col items-center justify-center rounded-lg border border-[#D4DDE2] bg-[#F3F6F7] text-[#426579]">
+                        <PdfDocumentIcon className="h-5 w-5" />
+                        <span className="mt-0.5 font-mono text-[10px] font-semibold leading-none tabular-nums">
+                          #{index + 1}
+                        </span>
+                      </div>
 
                       <div className="min-w-0 flex-1">
-                        <p
-                          title={item.name}
-                          className="truncate text-sm font-medium text-[#20272B]"
-                        >
-                          {item.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p
+                            title={item.name}
+                            className="truncate text-sm font-medium text-[#20272B]"
+                          >
+                            {item.name}
+                          </p>
+                          {positionNote ? (
+                            <span className="shrink-0 text-[11px] font-medium text-[#466677]">
+                              ({positionNote})
+                            </span>
+                          ) : null}
+                        </div>
+
                         {hasError ? (
                           <p className="mt-0.5 text-xs text-[#7A2727]">
                             {item.validationError}
                           </p>
                         ) : (
                           <p className="mt-0.5 font-mono text-xs text-[#556168] tabular-nums">
-                            {formatPdfBytes(item.sizeBytes)} ·{" "}
                             {item.pageCount !== null
                               ? `${item.pageCount} ${
                                   item.pageCount === 1 ? "page" : "pages"
                                 }`
-                              : "Pages pending"}
+                              : "Pages pending"}{" "}
+                            · {formatPdfBytes(item.sizeBytes)}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center justify-end gap-1 pl-8 sm:pl-0">
+                    <div className="flex shrink-0 items-center justify-end gap-1.5">
                       <button
                         type="button"
                         disabled={index === 0 || isMerging}
                         onClick={() => moveItem(index, index - 1)}
-                        aria-label={`Move ${item.name} up`}
-                        title="Move up"
+                        aria-label={`Move ${item.name} earlier`}
+                        title="Move earlier"
                         className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#556168] transition-colors hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-35 disabled:hover:border-[#D4DDE2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:h-10 sm:w-10"
                       >
                         <ChevronUpIcon className="h-4 w-4" />
@@ -837,8 +671,8 @@ export function PdfMerger() {
                           index === queuedFiles.length - 1 || isMerging
                         }
                         onClick={() => moveItem(index, index + 1)}
-                        aria-label={`Move ${item.name} down`}
-                        title="Move down"
+                        aria-label={`Move ${item.name} later`}
+                        title="Move later"
                         className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#D4DDE2] bg-white text-[#556168] transition-colors hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-35 disabled:hover:border-[#D4DDE2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] sm:h-10 sm:w-10"
                       >
                         <ChevronDownIcon className="h-4 w-4" />
@@ -860,10 +694,23 @@ export function PdfMerger() {
               })}
             </ol>
 
-            <p className="text-xs text-[#556168]">
-              Drag rows or use the up and down controls to set the exact page
-              order. Drop additional PDFs anywhere here to append them.
-            </p>
+            {/* Inline Drop / Append Cue */}
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-[#D4DDE2] bg-[#F3F6F7]/55 px-4 py-3 text-xs text-[#556168]">
+              <span>
+                Drag cards or use the arrows to arrange order. Drop more PDFs
+                anywhere here to add them to the end.
+              </span>
+              {queuedFiles.length < MAX_MERGE_FILES ? (
+                <button
+                  type="button"
+                  disabled={isMerging || isInspecting}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+                >
+                  Browse PDFs
+                </button>
+              ) : null}
+            </div>
           </section>
 
           {/* Output Controls, Progress & Result */}
@@ -871,10 +718,20 @@ export function PdfMerger() {
             onSubmit={handleMerge}
             className="space-y-5 rounded-2xl border border-[#D4DDE2] bg-white p-5 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6 lg:col-span-5"
           >
+            {/* Combined Summary Box */}
+            <div className="rounded-xl bg-[#F3F6F7] p-3.5 text-xs">
+              <p className="font-medium text-[#466677]">Combined output</p>
+              <p className="mt-1 font-mono text-sm font-semibold text-[#20272B] tabular-nums">
+                {queuedFiles.length}{" "}
+                {queuedFiles.length === 1 ? "PDF" : "PDFs"} → 1 document (
+                {totalPages} {totalPages === 1 ? "page" : "pages"})
+              </p>
+            </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="merged-pdf-filename"
-                className="block text-xs font-medium text-[#556168]"
+                className="block text-xs font-semibold text-[#20272B]"
               >
                 Output filename
               </label>
@@ -890,12 +747,12 @@ export function PdfMerger() {
                   }
                 }}
                 placeholder="binro-merged.pdf"
-                className="min-h-[42px] w-full rounded-lg border border-[#D4DDE2] bg-white px-3 py-2 font-mono text-sm text-[#20272B] focus:border-[#5C7E8F] focus:outline-none focus:ring-2 focus:ring-[#5C7E8F]/30 disabled:bg-[#F3F6F7]"
+                className="min-h-[44px] w-full rounded-xl border border-[#D4DDE2] bg-white px-3 py-2 font-mono text-sm text-[#20272B] focus:border-[#5C7E8F] focus:outline-none focus:ring-2 focus:ring-[#5C7E8F]/30 disabled:bg-[#F3F6F7]"
               />
               {outputFilenameInput.trim() &&
               outputFilenameInput.trim() !== sanitizedDownloadFilename ? (
                 <p className="truncate text-xs text-[#466677]">
-                  Will download as{" "}
+                  Saves as{" "}
                   <span className="font-mono text-[#20272B]">
                     {sanitizedDownloadFilename}
                   </span>
@@ -917,63 +774,21 @@ export function PdfMerger() {
               </p>
             ) : null}
 
-            {/* Honest Progress Panel */}
             {isMerging && progress ? (
-              <div
-                aria-live="polite"
-                className="space-y-2.5 rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/65 p-4"
-              >
-                <div className="flex items-baseline justify-between gap-2 text-xs">
-                  <div className="min-w-0">
-                    <span className="font-semibold text-[#20272B]">
-                      {STAGE_LABELS[progress.stage]}
-                    </span>
-                    <span className="ml-2 text-[#556168]">
-                      {progress.detail}
-                    </span>
-                  </div>
-                  <span className="shrink-0 font-mono text-[#466677] tabular-nums">
-                    {progress.percent !== null
-                      ? `${progress.percent}%`
-                      : "Working"}
-                  </span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#D4DDE2]">
-                  {progress.percent !== null ? (
-                    <div
-                      className="h-full rounded-full bg-[#1CC8A0] transition-all duration-150"
-                      style={{ width: `${progress.percent}%` }}
-                    />
-                  ) : (
-                    <div className="h-full w-1/3 rounded-full bg-[#426579] animate-binro-indeterminate" />
-                  )}
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleCancelMerge}
-                    className="min-h-[36px] rounded-md px-2 text-xs font-medium text-[#556168] hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+              <ToolProgressCard
+                stageLabel={STAGE_LABELS[progress.stage]}
+                detail={progress.detail}
+                percent={progress.percent}
+                onCancel={handleCancelMerge}
+              />
             ) : null}
 
-            {/* Merged Result Summary */}
             {resultState && isResultCurrent && !isMerging ? (
               <div
                 aria-live="polite"
                 className="space-y-4 border-t border-[#D4DDE2] pt-5"
               >
-                <div className="inline-flex items-center gap-2">
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[#EAFBF6] text-[#0E6B56]">
-                    <CheckIcon className="h-3.5 w-3.5" />
-                  </span>
-                  <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#0E6B56]">
-                    Merged PDF ready
-                  </p>
-                </div>
+                <ToolResultHeader title="Your merged PDF is ready" />
 
                 <dl className="grid grid-cols-3 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs">
                   <div>
@@ -997,7 +812,7 @@ export function PdfMerger() {
                 </dl>
 
                 <p className="truncate text-xs text-[#556168]">
-                  Output:{" "}
+                  Filename:{" "}
                   <span
                     title={sanitizedDownloadFilename}
                     className="font-mono text-[#20272B]"
@@ -1013,7 +828,7 @@ export function PdfMerger() {
                     className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
                   >
                     <DownloadIcon className="h-4 w-4" />
-                    <span>Download PDF</span>
+                    <span>Download merged PDF</span>
                   </button>
 
                   <button
@@ -1028,8 +843,8 @@ export function PdfMerger() {
             ) : (
               <div className="space-y-3 border-t border-[#D4DDE2]/80 pt-5">
                 {queuedFiles.length < 2 ? (
-                  <p className="text-xs text-[#466677]">
-                    Add at least one more PDF file to enable merging.
+                  <p className="rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/75 px-3.5 py-2.5 text-xs text-[#466677]">
+                    Add at least one more PDF file on the left to combine them.
                   </p>
                 ) : null}
 
@@ -1039,7 +854,7 @@ export function PdfMerger() {
                     disabled={!canMerge}
                     className="min-h-[46px] flex-1 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
                   >
-                    {isMerging ? "Merging..." : "Merge PDFs"}
+                    {isMerging ? "Merging PDFs..." : "Merge PDFs"}
                   </button>
 
                   <button
@@ -1048,7 +863,7 @@ export function PdfMerger() {
                     onClick={handleReset}
                     className="min-h-[44px] rounded-xl border border-[#D4DDE2] bg-white px-4 py-2.5 text-sm font-medium text-[#556168] transition-colors duration-150 hover:border-[#5C7E8F] hover:text-[#20272B] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
                   >
-                    Reset
+                    Start over
                   </button>
                 </div>
               </div>
@@ -1057,13 +872,7 @@ export function PdfMerger() {
         </div>
       )}
 
-      {/* Quiet Privacy Line */}
-      <div className="flex items-center justify-between pt-1">
-        <p className="inline-flex items-center gap-2 text-xs text-[#556168]">
-          <LockIcon className="h-3.5 w-3.5 text-[#466677]" />
-          <span>Your files are processed locally in your browser.</span>
-        </p>
-      </div>
+      <ToolPrivacyNote text="Your PDFs stay on your device and are combined locally in your browser." />
     </div>
   );
 }
