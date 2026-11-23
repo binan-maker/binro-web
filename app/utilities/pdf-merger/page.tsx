@@ -89,19 +89,33 @@ export default function PdfMergerPage() {
         {/* Subtle Cross-Links */}
         <div className="mx-auto mt-8 max-w-[1040px]">
           <p className="text-xs text-[#556168]">
-            Need to reduce file size after merging?{" "}
+            Need to split pages or reduce file size?{" "}
+            <Link
+              href="/utilities/pdf-splitter"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              PDF Splitter
+            </Link>
+            ,{" "}
             <Link
               href="/utilities/pdf-compressor"
               className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
             >
-              Try PDF Compressor
-            </Link>{" "}
-            or{" "}
+              PDF Compressor
+            </Link>
+            ,{" "}
             <Link
               href="/utilities/image-resizer"
               className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
             >
               Image Resizer
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/utilities/image-to-pdf"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              Image to PDF
             </Link>
             .
           </p>

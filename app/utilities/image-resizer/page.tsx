@@ -59,8 +59,43 @@ export default function ImageResizerPage() {
           <ImageResizer />
         </div>
 
+        {/* Subtle Cross-Links */}
+        <div className="mx-auto mt-8 max-w-[1040px]">
+          <p className="text-xs text-[#556168]">
+            Working with PDF documents?{" "}
+            <Link
+              href="/utilities/pdf-compressor"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              PDF Compressor
+            </Link>
+            ,{" "}
+            <Link
+              href="/utilities/pdf-merger"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              PDF Merger
+            </Link>
+            ,{" "}
+            <Link
+              href="/utilities/pdf-splitter"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              PDF Splitter
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/utilities/image-to-pdf"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              Image to PDF
+            </Link>
+            .
+          </p>
+        </div>
+
         {/* Collapsed Optional Help */}
-        <div className="mt-10 sm:mt-12">
+        <div className="mt-8 sm:mt-10">
           <ImageResizerHelp />
         </div>
       </Container>

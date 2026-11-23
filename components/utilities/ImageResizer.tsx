@@ -87,6 +87,23 @@ function DownloadIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+function CheckIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="m5 10.5 3.5 3.5 6.5-7.5" />
+    </svg>
+  );
+}
+
 const TARGET_SIZE_PRESETS = [20, 50, 100, 200, 500] as const;
 
 const JPEG_BG_OPTIONS = [
@@ -367,7 +384,11 @@ export function ImageResizer() {
             event.preventDefault();
             setIsDragging(true);
           }}
-          onDragLeave={() => setIsDragging(false)}
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+              setIsDragging(false);
+            }
+          }}
           onDrop={handleDrop}
           className="rounded-2xl border border-[#D4DDE2] bg-white p-4 sm:p-6 shadow-[0_1px_2px_rgba(32,39,43,0.03)]"
         >
@@ -386,7 +407,7 @@ export function ImageResizer() {
               type="button"
               disabled={isInspecting}
               onClick={() => fileInputRef.current?.click()}
-              className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#426579] px-6 py-2.5 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#355364] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
+              className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#426579] px-6 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
             >
               {isInspecting ? "Reading image..." : "Choose an image"}
             </button>
@@ -518,9 +539,14 @@ export function ImageResizer() {
                       `Output is ${formatBytes(resultImage.outputSizeBytes)}, above your ${resultImage.targetSizeKb} KB target.`}
                   </p>
                 ) : resultImage.targetSizeKb !== null ? (
-                  <p className="text-xs text-[#426579]">
-                    Target met: within {resultImage.targetSizeKb} KB (
-                    {resultImage.outputFormatLabel})
+                  <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0E6B56]">
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-[#EAFBF6] text-[#0E6B56]">
+                      <CheckIcon className="h-3 w-3" />
+                    </span>
+                    <span>
+                      Target met: within {resultImage.targetSizeKb} KB (
+                      {resultImage.outputFormatLabel})
+                    </span>
                   </p>
                 ) : null}
               </div>
@@ -795,7 +821,7 @@ export function ImageResizer() {
                   <button
                     type="button"
                     onClick={handleDownload}
-                    className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#355364] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
+                    className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
                   >
                     <DownloadIcon className="h-4 w-4" />
                     <span>Download image</span>
@@ -822,7 +848,7 @@ export function ImageResizer() {
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="min-h-[46px] flex-1 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#355364] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
+                    className="min-h-[46px] flex-1 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
                   >
                     {isProcessing ? "Resizing..." : "Resize image"}
                   </button>

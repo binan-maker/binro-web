@@ -102,13 +102,20 @@ export default function PdfSplitterPage() {
               className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
             >
               PDF Compressor
-            </Link>{" "}
-            or{" "}
+            </Link>
+            ,{" "}
             <Link
               href="/utilities/image-resizer"
               className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
             >
               Image Resizer
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/utilities/image-to-pdf"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              Image to PDF
             </Link>
             .
           </p>

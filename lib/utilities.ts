@@ -167,6 +167,32 @@ export const UTILITY_TOOLS: UtilityTool[] = [
       "document",
     ],
   },
+  {
+    id: "image-to-pdf",
+    name: "BinRo Image to PDF",
+    shortTitle: "Image to PDF",
+    shortDescription: "Convert multiple images into one PDF document.",
+    description:
+      "Turn JPG, PNG, WebP, BMP, and GIF images into a single PDF document. Arrange images, customize page layout, and download in your browser.",
+    categoryId: "pdf-document-tools",
+    href: "/utilities/image-to-pdf",
+    status: "available",
+    keywords: [
+      "image",
+      "images",
+      "jpg",
+      "jpeg",
+      "png",
+      "webp",
+      "bmp",
+      "gif",
+      "pdf",
+      "convert",
+      "converter",
+      "combine",
+      "document",
+    ],
+  },
 ];
 
 export function getUtilityCategoryById(

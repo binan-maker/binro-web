@@ -341,10 +341,15 @@ export function PdfSplitter() {
     event.preventDefault();
     setIsDragging(false);
     if (isInspecting || isSplitting) return;
-    const file = event.dataTransfer.files?.[0];
-    if (file) {
-      void handleSelectFile(file);
+    const files = event.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    if (files.length > 1) {
+      setErrorMessage(
+        "Please select one PDF document at a time."
+      );
+      return;
     }
+    void handleSelectFile(files[0]);
   };
 
   const handleReset = () => {
@@ -657,10 +662,25 @@ export function PdfSplitter() {
     extractExpression.trim().length > 0 &&
     planPreview?.ok === false;
 
+  const hasEmptyRangeRow =
+    splitMode === "ranges" &&
+    rangeRows.some((r) => r.value.trim().length === 0);
+
+  const hasNonEmptyRangeInput =
+    splitMode === "ranges" &&
+    rangeRows.some((r) => r.value.trim().length > 0);
+
+  const isErrorFromEmptyRow =
+    splitMode === "ranges" &&
+    planPreview?.ok === false &&
+    planPreview.errorRangeIndex !== undefined &&
+    rangeRows[planPreview.errorRangeIndex]?.value.trim().length === 0;
+
   const showRangesError =
     splitMode === "ranges" &&
     planPreview?.ok === false &&
-    rangeRows.some((r) => r.value.trim().length > 0);
+    hasNonEmptyRangeInput &&
+    !isErrorFromEmptyRow;
 
   const canStartSplit =
     Boolean(selectedFile) &&
@@ -707,7 +727,11 @@ export function PdfSplitter() {
             event.preventDefault();
             setIsDragging(true);
           }}
-          onDragLeave={() => setIsDragging(false)}
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+              setIsDragging(false);
+            }
+          }}
           onDrop={handleDrop}
           className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
         >
@@ -886,7 +910,7 @@ export function PdfSplitter() {
                         >
                           <label
                             htmlFor={`split-range-${row.id}`}
-                            className="w-16 shrink-0 font-mono text-xs font-medium text-[#5C7E8F] tabular-nums"
+                            className="w-14 shrink-0 font-mono text-xs font-medium text-[#5C7E8F] tabular-nums sm:w-16"
                           >
                             Range {idx + 1}
                           </label>
@@ -907,14 +931,14 @@ export function PdfSplitter() {
                                   : "e.g. 6-10"
                               }
                               aria-invalid={isRowErrorTarget || undefined}
-                              className={`min-h-[42px] w-full rounded-xl border bg-white px-3 py-2 pr-20 font-mono text-sm text-[#20272B] transition-colors focus:outline-none focus:ring-2 disabled:bg-[#F3F6F7] ${
+                              className={`min-h-[42px] w-full rounded-xl border bg-white px-3 py-2 pr-14 font-mono text-sm text-[#20272B] transition-colors focus:outline-none focus:ring-2 disabled:bg-[#F3F6F7] sm:pr-20 ${
                                 isRowErrorTarget
                                   ? "border-[#B44A4A] focus:border-[#B44A4A] focus:ring-[#B44A4A]/25"
                                   : "border-[#D4DDE2] focus:border-[#5C7E8F] focus:ring-[#5C7E8F]/30"
                               }`}
                             />
                             {rowParsed.ok ? (
-                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] text-[#5C7E8F] tabular-nums">
+                              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-[11px] text-[#5C7E8F] tabular-nums sm:right-3">
                                 {rowParsed.pages.length}{" "}
                                 {rowParsed.pages.length === 1 ? "pg" : "pgs"}
                               </span>
@@ -942,6 +966,11 @@ export function PdfSplitter() {
                       className="rounded-xl border border-[#B44A4A]/35 bg-[#FDF5F5] px-3.5 py-2.5 text-xs text-[#7A2727]"
                     >
                       {planPreview.error}
+                    </p>
+                  ) : hasEmptyRangeRow && hasNonEmptyRangeInput ? (
+                    <p className="text-xs text-[#556168]">
+                      Enter pages for every range row or remove empty rows to
+                      continue.
                     </p>
                   ) : null}
 
@@ -1075,8 +1104,9 @@ export function PdfSplitter() {
               inspection.hasLinks ? (
                 <p className="rounded-xl border border-[#D4DDE2] bg-[#F3F6F7]/75 px-3.5 py-2.5 text-xs leading-relaxed text-[#556168]">
                   This document contains interactive form fields, outlines, or
-                  links. Splitting creates new PDF files, and bookmarks or
-                  cross-page references may not transfer identically.
+                  links. Splitting creates new PDF files, and bookmarks,
+                  annotations, document metadata, or cross-page links may not
+                  transfer identically.
                 </p>
               ) : null}
 

@@ -33,7 +33,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
             route === "/utilities/image-resizer" ||
             route === "/utilities/pdf-compressor" ||
             route === "/utilities/pdf-merger" ||
-            route === "/utilities/pdf-splitter"
+            route === "/utilities/pdf-splitter" ||
+            route === "/utilities/image-to-pdf"
           ? 0.9
           : route === "/about"
             ? 0.8

@@ -42,7 +42,7 @@ const SPLITTER_HELP_ITEMS: HelpItem[] = [
     id: "limitations",
     question: "What happens to digital signatures, forms, or bookmarks?",
     answer:
-      "Splitting creates new PDF documents, which invalidates cryptographic digital signatures. Interactive form fields, document outlines/bookmarks, and cross-page links may also not carry over identically.",
+      "Splitting creates new PDF documents, which invalidates cryptographic digital signatures. Interactive form fields, document outlines/bookmarks, annotations, cross-page links, and original document metadata may also not carry over identically.",
   },
   {
     id: "limits",

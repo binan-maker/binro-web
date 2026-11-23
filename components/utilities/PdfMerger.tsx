@@ -161,6 +161,23 @@ function PlusIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+function CheckIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="m5 10.5 3.5 3.5 6.5-7.5" />
+    </svg>
+  );
+}
+
 interface QueuedPdfFile {
   id: string;
   file: File;
@@ -606,7 +623,11 @@ export function PdfMerger() {
             event.preventDefault();
             setIsDraggingUpload(true);
           }}
-          onDragLeave={() => setIsDraggingUpload(false)}
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+              setIsDraggingUpload(false);
+            }
+          }}
           onDrop={handleUploadDrop}
           className="rounded-2xl border border-[#D4DDE2] bg-white p-4 shadow-[0_1px_2px_rgba(32,39,43,0.03)] sm:p-6"
         >
@@ -625,7 +646,7 @@ export function PdfMerger() {
               type="button"
               disabled={isInspecting}
               onClick={() => fileInputRef.current?.click()}
-              className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#426579] px-6 py-2.5 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#355364] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
+              className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#426579] px-6 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
             >
               {isInspecting ? "Validating PDFs..." : "Select PDF files"}
             </button>
@@ -899,7 +920,7 @@ export function PdfMerger() {
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#D4DDE2]">
                   {progress.percent !== null ? (
                     <div
-                      className="h-full rounded-full bg-[#426579] transition-all duration-150"
+                      className="h-full rounded-full bg-[#1CC8A0] transition-all duration-150"
                       style={{ width: `${progress.percent}%` }}
                     />
                   ) : (
@@ -924,9 +945,14 @@ export function PdfMerger() {
                 aria-live="polite"
                 className="space-y-4 border-t border-[#D4DDE2] pt-5"
               >
-                <p className="text-xs font-medium uppercase tracking-[0.06em] text-[#5C7E8F]">
-                  Merged PDF ready
-                </p>
+                <div className="inline-flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[#EAFBF6] text-[#0E6B56]">
+                    <CheckIcon className="h-3.5 w-3.5" />
+                  </span>
+                  <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#0E6B56]">
+                    Merged PDF ready
+                  </p>
+                </div>
 
                 <dl className="grid grid-cols-3 gap-3 rounded-xl bg-[#F3F6F7] p-3.5 text-xs">
                   <div>
@@ -963,7 +989,7 @@ export function PdfMerger() {
                   <button
                     type="button"
                     onClick={handleDownload}
-                    className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#355364] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
+                    className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
                   >
                     <DownloadIcon className="h-4 w-4" />
                     <span>Download PDF</span>
@@ -990,7 +1016,7 @@ export function PdfMerger() {
                   <button
                     type="submit"
                     disabled={!canMerge}
-                    className="min-h-[46px] flex-1 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#355364] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
+                    className="min-h-[46px] flex-1 rounded-xl bg-[#426579] px-5 py-3 text-sm font-medium text-white transition-all duration-150 hover:bg-[#355364] active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2"
                   >
                     {isMerging ? "Merging..." : "Merge PDFs"}
                   </button>

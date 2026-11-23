@@ -85,15 +85,36 @@ export default function PdfCompressorPage() {
           <PdfCompressor />
         </div>
 
-        {/* Subtle Cross-Link to Image Resizer */}
+        {/* Subtle Cross-Link to Related Tools */}
         <div className="mx-auto mt-8 max-w-[1040px]">
           <p className="text-xs text-[#556168]">
-            Need to resize an image instead?{" "}
+            Working with multiple documents or images?{" "}
+            <Link
+              href="/utilities/pdf-merger"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              PDF Merger
+            </Link>
+            ,{" "}
+            <Link
+              href="/utilities/pdf-splitter"
+              className="rounded-sm font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
+            >
+              PDF Splitter
+            </Link>
+            ,{" "}
             <Link
               href="/utilities/image-resizer"
               className="font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] rounded-sm"
             >
-              Try Image Resizer
+              Image Resizer
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/utilities/image-to-pdf"
+              className="font-medium text-[#426579] underline-offset-4 hover:text-[#20272B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] rounded-sm"
+            >
+              Image to PDF
             </Link>
             .
           </p>
