@@ -31,10 +31,10 @@ export function Hero() {
               <ArrowRightIcon className="h-4 w-4" />
             </ButtonLink>
             <Link
-              href="/utilities/image-resizer"
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-[#D4DDE2] bg-white px-5 py-2.5 text-sm font-medium text-[#20272B] transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 sm:text-[0.9375rem]"
+              href="/utilities"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-[#D4DDE2] bg-white px-5 py-2.5 text-sm font-medium text-[#20272B] transition-all duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 sm:text-[0.9375rem]"
             >
-              <span>Image Resizer</span>
+              <span>Browse Utilities</span>
             </Link>
           </div>
         </div>

@@ -17,10 +17,10 @@ export function Divisions() {
             </h2>
           </div>
           <Link
-            href="/utilities/image-resizer"
+            href="/utilities"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-[#426579] transition-colors hover:text-[#20272B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] rounded-sm"
           >
-            <span>Available now: Image Resizer</span>
+            <span>Explore BinRo Utilities</span>
             <ArrowRightIcon className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -30,7 +30,7 @@ export function Divisions() {
             <Link
               key={division.id}
               href={division.href}
-              className="group flex flex-col justify-between rounded-2xl border border-[#D4DDE2] bg-white p-7 transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 sm:p-8"
+              className="group flex flex-col justify-between rounded-2xl border border-[#D4DDE2] bg-white p-7 transition-all duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7]/50 active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 sm:p-8"
             >
               <div>
                 <div className="flex items-center justify-between gap-4">

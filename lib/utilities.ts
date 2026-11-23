@@ -144,6 +144,29 @@ export const UTILITY_TOOLS: UtilityTool[] = [
       "document",
     ],
   },
+  {
+    id: "pdf-splitter",
+    name: "BinRo PDF Splitter",
+    shortTitle: "PDF Splitter",
+    shortDescription:
+      "Split a PDF into separate files or extract selected pages.",
+    description:
+      "Separate PDF pages into individual documents or extract exactly the pages you need, directly in your browser.",
+    categoryId: "pdf-document-tools",
+    href: "/utilities/pdf-splitter",
+    status: "available",
+    keywords: [
+      "pdf",
+      "split",
+      "splitter",
+      "separate",
+      "extract",
+      "pages",
+      "range",
+      "zip",
+      "document",
+    ],
+  },
 ];
 
 export function getUtilityCategoryById(

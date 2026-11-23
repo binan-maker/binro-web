@@ -8,13 +8,17 @@ export function UtilitiesDirectory() {
   );
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6">
       {availableTools.map((tool) => (
         <Link
           key={tool.id}
           href={tool.href}
-          className="group flex min-h-[164px] flex-col justify-between rounded-2xl border border-[#D4DDE2] bg-[#F3F6F7]/50 p-6 transition-colors duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 sm:p-8"
+          className="group relative flex min-h-[168px] flex-col justify-between overflow-hidden rounded-2xl border border-[#D4DDE2] bg-[#F3F6F7]/45 p-6 transition-all duration-150 hover:border-[#5C7E8F] hover:bg-[#F3F6F7] active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] focus-visible:ring-offset-2 sm:p-8"
         >
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 bg-[#1CC8A0] transition-transform duration-200 group-hover:scale-x-100"
+          />
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-[#20272B]">
               {tool.shortTitle}

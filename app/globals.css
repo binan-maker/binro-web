@@ -10,6 +10,9 @@
   --brand: #5c7e8f;
   --brand-strong: #426579;
   --brand-hover: #355364;
+  --accent-mint: #1cc8a0;
+  --accent-mint-soft: #eafbf6;
+  --accent-mint-ink: #0e6b56;
 }
 
 @theme inline {
@@ -20,6 +23,7 @@
   --color-muted-grey: var(--text-subtle);
   --color-brand-blue: var(--brand);
   --color-brand-deep: var(--brand-strong);
+  --color-accent-mint: var(--accent-mint);
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-display: var(--font-plus-jakarta), ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
