@@ -229,9 +229,15 @@ export interface FontLoadResult {
 }
 
 export async function ensureHandwritingFontLoaded(
-  fontId: HandwritingFontId
+  fontId: HandwritingFontId,
+  fontWeight = 400
 ): Promise<FontLoadResult> {
   const font = getHandwritingFont(fontId);
+  const resolvedWeight = font.availableWeights.includes(fontWeight)
+    ? fontWeight
+    : font.availableWeights.includes(400)
+      ? 400
+      : font.availableWeights[0];
 
   if (typeof document === "undefined" || !("fonts" in document)) {
     return {
@@ -246,9 +252,14 @@ export async function ensureHandwritingFontLoaded(
     await document.fonts.ready;
 
     const loadPromises: Promise<FontFace[]>[] = [
-      document.fonts.load(`400 18px "${font.family}"`, "AaBbCc123"),
+      document.fonts.load(`${resolvedWeight} 18px "${font.family}"`, "AaBbCc123"),
     ];
-    if (font.supportsTrueBold) {
+    if (resolvedWeight !== 400 && font.availableWeights.includes(400)) {
+      loadPromises.push(
+        document.fonts.load(`400 18px "${font.family}"`, "AaBbCc123")
+      );
+    }
+    if (font.supportsTrueBold && font.boldWeight !== resolvedWeight) {
       loadPromises.push(
         document.fonts.load(
           `${font.boldWeight} 18px "${font.family}"`,
@@ -260,7 +271,9 @@ export async function ensureHandwritingFontLoaded(
     await Promise.all(loadPromises);
     await document.fonts.ready;
 
-    const isLoaded = document.fonts.check(`400 18px "${font.family}"`);
+    const isLoaded = document.fonts.check(
+      `${resolvedWeight} 18px "${font.family}"`
+    );
     if (!isLoaded) {
       return {
         fontId,

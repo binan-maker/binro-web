@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import {
   INK_PRESETS,
   PAPER_COLOR_PRESETS,
@@ -110,6 +110,7 @@ export function PaperStudioControls({
   onCancelExport,
   sectionMode = "all",
 }: PaperStudioControlsProps) {
+  const uid = useId();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     handwriting: true,
     paper: true,
@@ -217,10 +218,49 @@ export function PaperStudioControls({
               </div>
             </div>
 
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-[#466677]">Font weight</span>
+                <span className="font-mono text-[#556168] tabular-nums">
+                  {settings.fontWeight}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {activeFont.availableWeights.map((weight) => {
+                  const active = settings.fontWeight === weight;
+                  const label =
+                    weight === 300
+                      ? "Light"
+                      : weight === 400
+                        ? "Regular"
+                        : weight === 500
+                          ? "Medium"
+                          : weight === 600
+                            ? "Semi"
+                            : "Bold";
+                  return (
+                    <button
+                      key={weight}
+                      type="button"
+                      onClick={() => onUpdateSettings({ fontWeight: weight })}
+                      aria-pressed={active}
+                      className={`min-h-[34px] flex-1 rounded-lg border px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F] ${
+                        active
+                          ? "border-[#426579] bg-[#426579] text-white"
+                          : "border-[#D4DDE2] bg-white text-[#20272B] hover:bg-[#F3F6F7]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div>
               <div className="flex items-center justify-between text-xs">
                 <label
-                  htmlFor="ps-font-size"
+                  htmlFor={`${uid}-font-size`}
                   className="font-medium text-[#466677]"
                 >
                   Font size
@@ -230,7 +270,7 @@ export function PaperStudioControls({
                 </span>
               </div>
               <input
-                id="ps-font-size"
+                id={`${uid}-font-size`}
                 type="range"
                 min={SETTING_LIMITS.fontSizePt.min}
                 max={SETTING_LIMITS.fontSizePt.max}
@@ -358,13 +398,13 @@ export function PaperStudioControls({
 
             <div className="space-y-1.5">
               <label
-                htmlFor="ps-paper-type"
+                htmlFor={`${uid}-paper-type`}
                 className="block text-xs font-medium text-[#466677]"
               >
                 Paper style
               </label>
               <select
-                id="ps-paper-type"
+                id={`${uid}-paper-type`}
                 value={settings.paperType}
                 onChange={(e) => {
                   const nextType = e.target.value as PaperTypeId;
@@ -442,7 +482,7 @@ export function PaperStudioControls({
               <div className="space-y-3 rounded-xl border border-[#D4DDE2]/80 bg-[#F3F6F7]/50 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <label
-                    htmlFor="ps-rule-color"
+                    htmlFor={`${uid}-rule-color`}
                     className="text-xs font-medium text-[#466677]"
                   >
                     {settings.paperType === "dotted"
@@ -452,7 +492,7 @@ export function PaperStudioControls({
                         : "Rule color"}
                   </label>
                   <input
-                    id="ps-rule-color"
+                    id={`${uid}-rule-color`}
                     type="color"
                     value={settings.ruleColor}
                     onChange={(e) =>
@@ -469,7 +509,7 @@ export function PaperStudioControls({
                   <div>
                     <div className="flex items-center justify-between text-xs">
                       <label
-                        htmlFor="ps-rule-spacing"
+                        htmlFor={`${uid}-rule-spacing`}
                         className="font-medium text-[#466677]"
                       >
                         Rule spacing
@@ -479,7 +519,7 @@ export function PaperStudioControls({
                       </span>
                     </div>
                     <input
-                      id="ps-rule-spacing"
+                      id={`${uid}-rule-spacing`}
                       type="range"
                       min={SETTING_LIMITS.ruleSpacingMm.min}
                       max={SETTING_LIMITS.ruleSpacingMm.max}
@@ -497,7 +537,7 @@ export function PaperStudioControls({
                   <div>
                     <div className="flex items-center justify-between text-xs">
                       <label
-                        htmlFor="ps-grid-spacing"
+                        htmlFor={`${uid}-grid-spacing`}
                         className="font-medium text-[#466677]"
                       >
                         {settings.paperType === "dotted"
@@ -509,7 +549,7 @@ export function PaperStudioControls({
                       </span>
                     </div>
                     <input
-                      id="ps-grid-spacing"
+                      id={`${uid}-grid-spacing`}
                       type="range"
                       min={SETTING_LIMITS.gridSpacingMm.min}
                       max={SETTING_LIMITS.gridSpacingMm.max}
@@ -640,7 +680,7 @@ export function PaperStudioControls({
             <div>
               <div className="flex items-center justify-between text-xs">
                 <label
-                  htmlFor="ps-line-spacing"
+                  htmlFor={`${uid}-line-spacing`}
                   className="font-medium text-[#466677]"
                 >
                   Line spacing
@@ -650,7 +690,7 @@ export function PaperStudioControls({
                 </span>
               </div>
               <input
-                id="ps-line-spacing"
+                id={`${uid}-line-spacing`}
                 type="range"
                 min={SETTING_LIMITS.lineSpacing.min}
                 max={SETTING_LIMITS.lineSpacing.max}
@@ -666,7 +706,7 @@ export function PaperStudioControls({
             <div>
               <div className="flex items-center justify-between text-xs">
                 <label
-                  htmlFor="ps-word-spacing"
+                  htmlFor={`${uid}-word-spacing`}
                   className="font-medium text-[#466677]"
                 >
                   Word spacing
@@ -677,7 +717,7 @@ export function PaperStudioControls({
                 </span>
               </div>
               <input
-                id="ps-word-spacing"
+                id={`${uid}-word-spacing`}
                 type="range"
                 min={SETTING_LIMITS.wordSpacingPx.min}
                 max={SETTING_LIMITS.wordSpacingPx.max}
@@ -693,7 +733,7 @@ export function PaperStudioControls({
             <div>
               <div className="flex items-center justify-between text-xs">
                 <label
-                  htmlFor="ps-para-spacing"
+                  htmlFor={`${uid}-para-spacing`}
                   className="font-medium text-[#466677]"
                 >
                   Paragraph spacing
@@ -703,7 +743,7 @@ export function PaperStudioControls({
                 </span>
               </div>
               <input
-                id="ps-para-spacing"
+                id={`${uid}-para-spacing`}
                 type="range"
                 min={SETTING_LIMITS.paragraphSpacingPx.min}
                 max={SETTING_LIMITS.paragraphSpacingPx.max}
@@ -730,7 +770,7 @@ export function PaperStudioControls({
               <div>
                 <div className="flex items-center justify-between text-xs">
                   <label
-                    htmlFor="ps-margin-top"
+                    htmlFor={`${uid}-margin-top`}
                     className="font-medium text-[#466677]"
                   >
                     Top
@@ -740,7 +780,7 @@ export function PaperStudioControls({
                   </span>
                 </div>
                 <input
-                  id="ps-margin-top"
+                  id={`${uid}-margin-top`}
                   type="range"
                   min={SETTING_LIMITS.marginMm.min}
                   max={SETTING_LIMITS.marginMm.max}
@@ -756,7 +796,7 @@ export function PaperStudioControls({
               <div>
                 <div className="flex items-center justify-between text-xs">
                   <label
-                    htmlFor="ps-margin-bottom"
+                    htmlFor={`${uid}-margin-bottom`}
                     className="font-medium text-[#466677]"
                   >
                     Bottom
@@ -766,7 +806,7 @@ export function PaperStudioControls({
                   </span>
                 </div>
                 <input
-                  id="ps-margin-bottom"
+                  id={`${uid}-margin-bottom`}
                   type="range"
                   min={SETTING_LIMITS.marginMm.min}
                   max={SETTING_LIMITS.marginMm.max}
@@ -782,7 +822,7 @@ export function PaperStudioControls({
               <div>
                 <div className="flex items-center justify-between text-xs">
                   <label
-                    htmlFor="ps-margin-left"
+                    htmlFor={`${uid}-margin-left`}
                     className="font-medium text-[#466677]"
                   >
                     Left
@@ -792,7 +832,7 @@ export function PaperStudioControls({
                   </span>
                 </div>
                 <input
-                  id="ps-margin-left"
+                  id={`${uid}-margin-left`}
                   type="range"
                   min={SETTING_LIMITS.marginMm.min}
                   max={SETTING_LIMITS.marginMm.max}
@@ -808,7 +848,7 @@ export function PaperStudioControls({
               <div>
                 <div className="flex items-center justify-between text-xs">
                   <label
-                    htmlFor="ps-margin-right"
+                    htmlFor={`${uid}-margin-right`}
                     className="font-medium text-[#466677]"
                   >
                     Right
@@ -818,7 +858,7 @@ export function PaperStudioControls({
                   </span>
                 </div>
                 <input
-                  id="ps-margin-right"
+                  id={`${uid}-margin-right`}
                   type="range"
                   min={SETTING_LIMITS.marginMm.min}
                   max={SETTING_LIMITS.marginMm.max}
@@ -836,7 +876,7 @@ export function PaperStudioControls({
               <div>
                 <div className="flex items-center justify-between text-xs">
                   <label
-                    htmlFor="ps-offset-x"
+                    htmlFor={`${uid}-offset-x`}
                     className="font-medium text-[#466677]"
                   >
                     Horizontal nudge
@@ -847,7 +887,7 @@ export function PaperStudioControls({
                   </span>
                 </div>
                 <input
-                  id="ps-offset-x"
+                  id={`${uid}-offset-x`}
                   type="range"
                   min={SETTING_LIMITS.offsetMm.min}
                   max={SETTING_LIMITS.offsetMm.max}
@@ -863,7 +903,7 @@ export function PaperStudioControls({
               <div>
                 <div className="flex items-center justify-between text-xs">
                   <label
-                    htmlFor="ps-offset-y"
+                    htmlFor={`${uid}-offset-y`}
                     className="font-medium text-[#466677]"
                   >
                     Vertical nudge
@@ -874,7 +914,7 @@ export function PaperStudioControls({
                   </span>
                 </div>
                 <input
-                  id="ps-offset-y"
+                  id={`${uid}-offset-y`}
                   type="range"
                   min={SETTING_LIMITS.offsetMm.min}
                   max={SETTING_LIMITS.offsetMm.max}
@@ -903,13 +943,13 @@ export function PaperStudioControls({
         >
           <div>
             <label
-              htmlFor="ps-export-filename"
+              htmlFor={`${uid}-export-filename`}
               className="block text-xs font-medium text-[#466677]"
             >
               File name
             </label>
             <input
-              id="ps-export-filename"
+              id={`${uid}-export-filename`}
               type="text"
               value={filename}
               onChange={(e) => onChangeFilename(e.target.value)}

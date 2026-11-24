@@ -172,10 +172,12 @@ function drawPageTextToCanvas(
 
   for (const line of page.lines) {
     const baseY = line.y + line.baselineOffsetPx + line.variation.baselineShiftPx;
+    const baseWeight = line.baseFontWeight ?? settings.fontWeight;
+    const boldWeight = line.boldFontWeight ?? font.boldWeight;
     ctx.globalAlpha = line.variation.inkOpacity;
 
     if (line.listMarker && line.listMarkerX !== undefined) {
-      ctx.font = `400 ${line.fontSizePx}px "${font.family}", cursive`;
+      ctx.font = `${baseWeight} ${line.fontSizePx}px "${font.family}", cursive`;
       ctx.fillText(line.listMarker, line.listMarkerX, baseY);
     }
 
@@ -184,7 +186,7 @@ function drawPageTextToCanvas(
 
       for (const seg of word.segments) {
         const segX = word.x + seg.offsetX;
-        const weight = seg.bold ? font.boldWeight : 400;
+        const weight = seg.bold ? boldWeight : baseWeight;
         ctx.font = `${seg.italic ? "italic " : ""}${weight} ${line.fontSizePx}px "${font.family}", cursive`;
         ctx.fillText(seg.text, segX, wordY);
 
@@ -260,7 +262,10 @@ export async function exportSinglePagePng(
   baseFilename: string,
   preferredScale = 2.5
 ): Promise<PngExportResult> {
-  const fontCheck = await ensureHandwritingFontLoaded(settings.fontId);
+  const fontCheck = await ensureHandwritingFontLoaded(
+    settings.fontId,
+    settings.fontWeight
+  );
   if (!fontCheck.loaded) {
     throw new Error(
       fontCheck.error || "Selected handwriting font is not loaded yet."
@@ -304,7 +309,10 @@ export async function exportAllPagesAsZipPng(
     detail: "Verifying handwriting font availability...",
   });
 
-  const fontCheck = await ensureHandwritingFontLoaded(settings.fontId);
+  const fontCheck = await ensureHandwritingFontLoaded(
+    settings.fontId,
+    settings.fontWeight
+  );
   if (!fontCheck.loaded) {
     throw new Error(
       fontCheck.error || "Selected handwriting font failed to load."
@@ -379,7 +387,10 @@ export async function exportDocumentToPdf(
     detail: "Verifying handwriting font availability...",
   });
 
-  const fontCheck = await ensureHandwritingFontLoaded(settings.fontId);
+  const fontCheck = await ensureHandwritingFontLoaded(
+    settings.fontId,
+    settings.fontWeight
+  );
   if (!fontCheck.loaded) {
     throw new Error(
       fontCheck.error ||

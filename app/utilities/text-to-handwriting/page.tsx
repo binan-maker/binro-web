@@ -48,13 +48,13 @@ const JSON_LD = {
 
 export default function TextToHandwritingPage() {
   return (
-    <div className="bg-[#F3F6F7]/65 py-5 sm:py-8">
+    <div className="paper-studio-print-root bg-[#F3F6F7]/65 py-5 sm:py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
       />
 
-      <div className="mx-auto w-full max-w-[1384px] px-4 sm:px-8">
+      <div className="paper-studio-print-container mx-auto w-full max-w-[1384px] px-4 sm:px-8">
         {/* Compact Title & Breadcrumb (Hidden during print) */}
         <div className="paper-studio-no-print mx-auto max-w-[1320px]">
           <nav aria-label="Breadcrumb" className="text-xs font-medium">
@@ -86,7 +86,7 @@ export default function TextToHandwritingPage() {
         </div>
 
         {/* Main Studio Workspace */}
-        <div className="mt-4 sm:mt-5">
+        <div className="paper-studio-print-container mt-4 sm:mt-5">
           <PaperStudio />
         </div>
 

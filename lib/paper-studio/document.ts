@@ -92,6 +92,11 @@ export function parseInlineFormatting(
             idx += 2;
             continue;
           }
+          // For "**", prefer the outermost closing "**" if followed by another "*"
+          if (delim === "**" && input[idx + 2] === "*") {
+            idx += 1;
+            continue;
+          }
           return idx;
         }
       }
@@ -101,6 +106,27 @@ export function parseInlineFormatting(
   };
 
   while (i < input.length) {
+    // Check ***bold italic***
+    if (input.startsWith("***", i)) {
+      const after = input[i + 3];
+      if (after && !/\s/.test(after) && after !== "*") {
+        const closeIdx = findClosingDelimiter("***", i + 3);
+        if (closeIdx > i + 3) {
+          flushBuffer();
+          const inner = input.slice(i + 3, closeIdx);
+          runs.push(
+            ...parseInlineFormatting(inner, {
+              ...inherited,
+              bold: true,
+              italic: true,
+            })
+          );
+          i = closeIdx + 3;
+          continue;
+        }
+      }
+    }
+
     // Check **bold**
     if (input.startsWith("**", i)) {
       const after = input[i + 2];

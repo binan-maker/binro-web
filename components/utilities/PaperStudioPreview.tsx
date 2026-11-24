@@ -25,6 +25,7 @@ export function PaperStudioPreview({
 }: PaperStudioPreviewProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const programmaticScrollLockUntilRef = useRef<number>(0);
 
   const [zoom, setZoom] = useState<number>(0.72);
   const [fitToWidth, setFitToWidth] = useState<boolean>(true);
@@ -62,8 +63,18 @@ export function PaperStudioPreview({
     onChangeCurrentPage(clamped);
 
     if (!singlePageMode) {
+      const viewport = viewportRef.current;
       const target = pageRefs.current.get(clamped);
-      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (viewport && target) {
+        programmaticScrollLockUntilRef.current = Date.now() + 700;
+        const viewportRect = viewport.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const nextTop = viewport.scrollTop + (targetRect.top - viewportRect.top) - 16;
+        viewport.scrollTo({
+          top: Math.max(0, nextTop),
+          behavior: "smooth",
+        });
+      }
     }
   };
 
@@ -74,6 +85,9 @@ export function PaperStudioPreview({
     if (!root) return;
 
     const handleScroll = () => {
+      if (Date.now() < programmaticScrollLockUntilRef.current) {
+        return;
+      }
       const rootRect = root.getBoundingClientRect();
       const targetY = rootRect.top + rootRect.height * 0.35;
       let bestPage = currentPage;

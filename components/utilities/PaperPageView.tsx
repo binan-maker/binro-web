@@ -105,6 +105,8 @@ export const PaperPageView = memo(function PaperPageView({
       >
         {page.lines.map((line) => {
           const lineTop = line.y + line.variation.baselineShiftPx;
+          const baseWeight = line.baseFontWeight ?? settings.fontWeight;
+          const boldWeight = line.boldFontWeight ?? font.boldWeight;
           return (
             <div
               key={line.lineIndex}
@@ -121,7 +123,10 @@ export const PaperPageView = memo(function PaperPageView({
                 <span
                   aria-hidden="true"
                   className="absolute top-0 whitespace-pre"
-                  style={{ left: `${line.listMarkerX}px` }}
+                  style={{
+                    left: `${line.listMarkerX}px`,
+                    fontWeight: baseWeight,
+                  }}
                 >
                   {line.listMarker}
                 </span>
@@ -140,7 +145,7 @@ export const PaperPageView = memo(function PaperPageView({
                     <span
                       key={sIdx}
                       style={{
-                        fontWeight: seg.bold ? font.boldWeight : 400,
+                        fontWeight: seg.bold ? boldWeight : baseWeight,
                         fontStyle: seg.italic ? "italic" : "normal",
                         textDecoration: seg.underline ? "underline" : undefined,
                         textUnderlineOffset: seg.underline ? "0.14em" : undefined,
@@ -174,7 +179,7 @@ export const PaperPageView = memo(function PaperPageView({
 
   return (
     <div
-      className="relative shrink-0"
+      className="relative shrink-0 overflow-hidden"
       style={{
         width: `${scaledWidth}px`,
         height: `${scaledHeight}px`,

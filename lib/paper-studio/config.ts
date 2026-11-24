@@ -120,8 +120,15 @@ export interface MarginsMm {
   right: number;
 }
 
+export const FONT_WEIGHT_OPTIONS: Record<HandwritingFontId, number[]> = {
+  kalam: [300, 400, 700],
+  caveat: [400, 500, 600, 700],
+  "patrick-hand": [400],
+};
+
 export interface PaperStudioSettings {
   fontId: HandwritingFontId;
+  fontWeight: number;
   fontSizePt: number;
   inkColor: string;
   lineSpacing: number;
@@ -157,6 +164,7 @@ export const SETTING_LIMITS = {
 
 export const DEFAULT_STUDIO_SETTINGS: PaperStudioSettings = {
   fontId: "kalam",
+  fontWeight: 400,
   fontSizePt: 14.5,
   inkColor: "#1D4ED8",
   lineSpacing: 1.55,
@@ -240,8 +248,19 @@ export function normalizeStudioSettings(
     Math.floor((dims.heightMm - 50) / 2)
   );
 
+  const validWeights = FONT_WEIGHT_OPTIONS[settings.fontId] ?? [400];
+  const requestedWeight = Number.isFinite(settings.fontWeight)
+    ? settings.fontWeight
+    : 400;
+  const resolvedWeight = validWeights.includes(requestedWeight)
+    ? requestedWeight
+    : validWeights.includes(400)
+      ? 400
+      : validWeights[0];
+
   return {
     ...settings,
+    fontWeight: resolvedWeight,
     fontSizePt: clampNumber(
       settings.fontSizePt,
       SETTING_LIMITS.fontSizePt.min,

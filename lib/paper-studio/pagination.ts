@@ -60,6 +60,8 @@ export interface RenderedLine {
   widthPx: number;
   lineHeightPx: number;
   fontSizePx: number;
+  baseFontWeight: number;
+  boldFontWeight: number;
   listMarker?: string;
   listMarkerX?: number;
   listMarkerWidthPx?: number;
@@ -167,6 +169,7 @@ function getBlockTypography(
   blockType: DocumentBlockType,
   baseFontSizePx: number,
   lineSpacing: number,
+  baseWeight: number,
   boldWeight: number
 ): {
   fontSizePx: number;
@@ -204,7 +207,7 @@ function getBlockTypography(
   return {
     fontSizePx: baseFontSizePx,
     lineHeightPx: baseLineHeight,
-    defaultWeight: 400,
+    defaultWeight: baseWeight,
     topSpacingPx: 0,
     bottomSpacingPx: 0,
   };
@@ -214,6 +217,7 @@ function tokenizeRunsToWords(
   runs: InlineRun[],
   fontFamily: string,
   fontSizePx: number,
+  baseWeight: number,
   boldWeight: number,
   wordSpacingPx: number,
   measurer: TextMeasurer
@@ -223,7 +227,7 @@ function tokenizeRunsToWords(
   let currentWidth = 0;
 
   const normalSpaceWidth =
-    measurer.measureWidth(" ", fontFamily, fontSizePx, 400, false) +
+    measurer.measureWidth(" ", fontFamily, fontSizePx, baseWeight, false) +
     wordSpacingPx;
 
   const pushCurrentWord = (trailingSpaceWidth: number) => {
@@ -238,7 +242,7 @@ function tokenizeRunsToWords(
   };
 
   for (const run of runs) {
-    const weight = run.bold ? boldWeight : 400;
+    const weight = run.bold ? boldWeight : baseWeight;
     // Split keeping whitespace groups intact
     const pieces = run.text.split(/(\s+)/);
     for (const piece of pieces) {
@@ -288,6 +292,7 @@ function splitOversizedWord(
   maxWidth: number,
   fontFamily: string,
   fontSizePx: number,
+  baseWeight: number,
   boldWeight: number,
   measurer: TextMeasurer
 ): TokenWord[] {
@@ -300,7 +305,7 @@ function splitOversizedWord(
   let accWidth = 0;
 
   for (const seg of word.segments) {
-    const weight = seg.bold ? boldWeight : 400;
+    const weight = seg.bold ? boldWeight : baseWeight;
     let charBuf = "";
     let charBufWidth = 0;
 
@@ -373,6 +378,7 @@ function wrapBlockWords(
   continuationMaxWidth: number,
   fontFamily: string,
   fontSizePx: number,
+  baseWeight: number,
   boldWeight: number,
   measurer: TextMeasurer
 ): WrappedLineDraft[] {
@@ -391,6 +397,7 @@ function wrapBlockWords(
           safeMax,
           fontFamily,
           fontSizePx,
+          baseWeight,
           boldWeight,
           measurer
         )
@@ -622,8 +629,9 @@ export function paginateDocument(
 
   const baseFontSizePx = settings.fontSizePt * PT_TO_CSS_PX * font.fontSizeScale;
   const bodyLineHeightPx = baseFontSizePx * settings.lineSpacing;
+  const baseWeight = settings.fontWeight;
   const ascentRatio =
-    measurer.getAscentRatio?.(font.family, baseFontSizePx, 400) ?? 0.78;
+    measurer.getAscentRatio?.(font.family, baseFontSizePx, baseWeight) ?? 0.78;
 
   const blocks = parseDocumentText(rawText);
   const pages: PaginatedPage[] = [];
@@ -676,6 +684,7 @@ export function paginateDocument(
       block.type,
       baseFontSizePx,
       settings.lineSpacing,
+      baseWeight,
       font.boldWeight
     );
 
@@ -696,7 +705,7 @@ export function paginateDocument(
         markerText,
         font.family,
         typo.fontSizePx,
-        400,
+        baseWeight,
         false
       );
       listIndentPx = Math.max(
@@ -714,6 +723,7 @@ export function paginateDocument(
       block.runs,
       font.family,
       typo.fontSizePx,
+      baseWeight,
       font.boldWeight,
       settings.wordSpacingPx,
       measurer
@@ -725,6 +735,7 @@ export function paginateDocument(
       effectiveMaxWidth,
       font.family,
       typo.fontSizePx,
+      baseWeight,
       font.boldWeight,
       measurer
     );
@@ -797,6 +808,8 @@ export function paginateDocument(
         widthPx: positioned.totalWidthPx,
         lineHeightPx: Number(typo.lineHeightPx.toFixed(2)),
         fontSizePx: Number(typo.fontSizePx.toFixed(2)),
+        baseFontWeight: baseWeight,
+        boldFontWeight: font.boldWeight,
         listMarker: showMarker ? block.listMarker : undefined,
         listMarkerX: showMarker ? contentRect.left : undefined,
         listMarkerWidthPx: showMarker ? listMarkerWidthPx : undefined,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { PAGE_BREAK_DELIMITER, type DocumentStats } from "@/lib/paper-studio/document";
 import { AlertIcon } from "@/components/ui/Icons";
 
@@ -33,15 +33,59 @@ export function PaperStudioEditor({
   unsupportedChars,
   fontName,
 }: PaperStudioEditorProps) {
+  const editorId = useId();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const lastSelectionRef = useRef<{
+    start: number;
+    end: number;
+    hasCursor: boolean;
+  }>({ start: 0, end: 0, hasCursor: false });
+  const pendingSelectionRef = useRef<{ start: number; end: number } | null>(null);
   const [confirmingClear, setConfirmingClear] = useState(false);
+
+  const syncSelectionFromEl = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    pendingSelectionRef.current = null;
+    lastSelectionRef.current = {
+      start: el.selectionStart ?? 0,
+      end: el.selectionEnd ?? 0,
+      hasCursor: true,
+    };
+  };
+
+  const getActiveSelectionRange = (fallbackToEnd = false): { start: number; end: number } => {
+    if (pendingSelectionRef.current) {
+      return pendingSelectionRef.current;
+    }
+
+    const el = textareaRef.current;
+    if (!el) {
+      const pos = fallbackToEnd ? text.length : 0;
+      return { start: pos, end: pos };
+    }
+    const selStart = el.selectionStart ?? 0;
+    const selEnd = el.selectionEnd ?? 0;
+    const isFocused =
+      typeof document !== "undefined" && document.activeElement === el;
+
+    if (
+      isFocused ||
+      lastSelectionRef.current.hasCursor ||
+      selStart > 0 ||
+      selEnd > 0
+    ) {
+      return { start: selStart, end: selEnd };
+    }
+
+    const pos = fallbackToEnd ? text.length : 0;
+    return { start: pos, end: pos };
+  };
 
   const applyInlineWrap = (prefix: string, suffix: string, fallbackWord: string) => {
     const el = textareaRef.current;
     if (!el) return;
 
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
+    const { start, end } = getActiveSelectionRange(false);
     const selected = text.slice(start, end);
 
     let nextText: string;
@@ -49,10 +93,36 @@ export function PaperStudioEditor({
     let nextSelEnd: number;
 
     if (selected.length > 0) {
-      // Toggle off if selection is already wrapped
-      const before = text.slice(Math.max(0, start - prefix.length), start);
-      const after = text.slice(end, end + suffix.length);
-      if (before === prefix && after === suffix) {
+      let alreadyWrapped = false;
+
+      if (prefix === "*" && suffix === "*") {
+        let starsBefore = 0;
+        while (start - 1 - starsBefore >= 0 && text[start - 1 - starsBefore] === "*") {
+          starsBefore += 1;
+        }
+        let starsAfter = 0;
+        while (end + starsAfter < text.length && text[end + starsAfter] === "*") {
+          starsAfter += 1;
+        }
+        const sharedStars = Math.min(starsBefore, starsAfter);
+        alreadyWrapped = sharedStars % 2 === 1;
+      } else if (prefix === "**" && suffix === "**") {
+        let starsBefore = 0;
+        while (start - 1 - starsBefore >= 0 && text[start - 1 - starsBefore] === "*") {
+          starsBefore += 1;
+        }
+        let starsAfter = 0;
+        while (end + starsAfter < text.length && text[end + starsAfter] === "*") {
+          starsAfter += 1;
+        }
+        alreadyWrapped = Math.min(starsBefore, starsAfter) >= 2;
+      } else {
+        const before = text.slice(Math.max(0, start - prefix.length), start);
+        const after = text.slice(end, end + suffix.length);
+        alreadyWrapped = before === prefix && after === suffix;
+      }
+
+      if (alreadyWrapped) {
         nextText =
           text.slice(0, start - prefix.length) +
           selected +
@@ -76,8 +146,15 @@ export function PaperStudioEditor({
       nextSelEnd = start + prefix.length + fallbackWord.length;
     }
 
+    lastSelectionRef.current = {
+      start: nextSelStart,
+      end: nextSelEnd,
+      hasCursor: true,
+    };
+    pendingSelectionRef.current = { start: nextSelStart, end: nextSelEnd };
     onChangeText(nextText, true);
     requestAnimationFrame(() => {
+      pendingSelectionRef.current = null;
       if (!textareaRef.current) return;
       textareaRef.current.focus();
       textareaRef.current.setSelectionRange(nextSelStart, nextSelEnd);
@@ -88,8 +165,7 @@ export function PaperStudioEditor({
     const el = textareaRef.current;
     if (!el) return;
 
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
+    const { start, end } = getActiveSelectionRange(false);
 
     const lineStart = text.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
     const rawLineEnd = text.indexOf("\n", end);
@@ -119,9 +195,19 @@ export function PaperStudioEditor({
     const replacement = updatedLines.join("\n");
     const nextText =
       text.slice(0, lineStart) + replacement + text.slice(lineEnd);
+    lastSelectionRef.current = {
+      start: lineStart,
+      end: lineStart + replacement.length,
+      hasCursor: true,
+    };
+    pendingSelectionRef.current = {
+      start: lineStart,
+      end: lineStart + replacement.length,
+    };
     onChangeText(nextText, true);
 
     requestAnimationFrame(() => {
+      pendingSelectionRef.current = null;
       if (!textareaRef.current) return;
       textareaRef.current.focus();
       textareaRef.current.setSelectionRange(
@@ -132,20 +218,26 @@ export function PaperStudioEditor({
   };
 
   const insertPageBreak = () => {
-    const el = textareaRef.current;
-    const cursor = el ? el.selectionStart ?? text.length : text.length;
+    const { start } = getActiveSelectionRange(true);
+    const cursor = start;
     const before = text.slice(0, cursor);
     const after = text.slice(cursor);
 
     const needsLeadingNewline = before.length > 0 && !before.endsWith("\n");
-    const needsTrailingNewline = after.length > 0 && !after.startsWith("\n");
-    const insertion = `${needsLeadingNewline ? "\n" : ""}${PAGE_BREAK_DELIMITER}${needsTrailingNewline ? "\n" : "\n"}`;
+    const insertion = `${needsLeadingNewline ? "\n" : ""}${PAGE_BREAK_DELIMITER}\n`;
 
     const nextText = before + insertion + after;
     const nextPos = before.length + insertion.length;
+    lastSelectionRef.current = {
+      start: nextPos,
+      end: nextPos,
+      hasCursor: true,
+    };
+    pendingSelectionRef.current = { start: nextPos, end: nextPos };
     onChangeText(nextText, true);
 
     requestAnimationFrame(() => {
+      pendingSelectionRef.current = null;
       if (!textareaRef.current) return;
       textareaRef.current.focus();
       textareaRef.current.setSelectionRange(nextPos, nextPos);
@@ -194,7 +286,10 @@ export function PaperStudioEditor({
           <button
             type="button"
             disabled={!canUndo}
-            onClick={onUndo}
+            onClick={() => {
+              setConfirmingClear(false);
+              onUndo();
+            }}
             title="Undo (Ctrl/Cmd+Z)"
             className="inline-flex min-h-[34px] items-center rounded-lg border border-[#D4DDE2] bg-white px-2.5 text-xs font-medium text-[#20272B] transition-colors hover:bg-[#F3F6F7] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
           >
@@ -203,7 +298,10 @@ export function PaperStudioEditor({
           <button
             type="button"
             disabled={!canRedo}
-            onClick={onRedo}
+            onClick={() => {
+              setConfirmingClear(false);
+              onRedo();
+            }}
             title="Redo (Ctrl/Cmd+Shift+Z)"
             className="inline-flex min-h-[34px] items-center rounded-lg border border-[#D4DDE2] bg-white px-2.5 text-xs font-medium text-[#20272B] transition-colors hover:bg-[#F3F6F7] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
           >
@@ -268,6 +366,7 @@ export function PaperStudioEditor({
       >
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyLinePrefix("# ", /^#\s+/)}
           title="Heading 1"
           className="inline-flex min-h-[32px] items-center rounded-md border border-transparent px-2 text-xs font-semibold text-[#20272B] hover:border-[#D4DDE2] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
@@ -276,6 +375,7 @@ export function PaperStudioEditor({
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyLinePrefix("## ", /^##\s+/)}
           title="Heading 2"
           className="inline-flex min-h-[32px] items-center rounded-md border border-transparent px-2 text-xs font-semibold text-[#20272B] hover:border-[#D4DDE2] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
@@ -285,6 +385,7 @@ export function PaperStudioEditor({
         <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-[#D4DDE2]" />
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyInlineWrap("**", "**", "bold text")}
           title="Bold (Ctrl/Cmd+B)"
           className="inline-flex min-h-[32px] min-w-[32px] items-center justify-center rounded-md border border-transparent px-2 text-xs font-bold text-[#20272B] hover:border-[#D4DDE2] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
@@ -293,6 +394,7 @@ export function PaperStudioEditor({
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyInlineWrap("*", "*", "italic text")}
           title="Italic (Ctrl/Cmd+I)"
           className="inline-flex min-h-[32px] min-w-[32px] items-center justify-center rounded-md border border-transparent px-2 text-xs italic font-medium text-[#20272B] hover:border-[#D4DDE2] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
@@ -301,6 +403,7 @@ export function PaperStudioEditor({
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyInlineWrap("__", "__", "underlined text")}
           title="Underline (Ctrl/Cmd+U)"
           className="inline-flex min-h-[32px] min-w-[32px] items-center justify-center rounded-md border border-transparent px-2 text-xs font-medium underline text-[#20272B] hover:border-[#D4DDE2] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
@@ -310,6 +413,7 @@ export function PaperStudioEditor({
         <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-[#D4DDE2]" />
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyLinePrefix("- ", /^\s*[-*]\s+/)}
           title="Bulleted list"
           className="inline-flex min-h-[32px] items-center rounded-md border border-transparent px-2 text-xs font-medium text-[#20272B] hover:border-[#D4DDE2] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
@@ -318,6 +422,7 @@ export function PaperStudioEditor({
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyLinePrefix("1. ", /^\s*\d+\.\s+/)}
           title="Numbered list"
           className="inline-flex min-h-[32px] items-center rounded-md border border-transparent px-2 text-xs font-medium text-[#20272B] hover:border-[#D4DDE2] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
@@ -326,6 +431,7 @@ export function PaperStudioEditor({
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={insertPageBreak}
           title="Insert explicit page break (---pagebreak---)"
           className="ml-auto inline-flex min-h-[32px] items-center rounded-md border border-[#D4DDE2] bg-white px-2.5 text-xs font-medium text-[#426579] transition-colors hover:border-[#5C7E8F] hover:bg-[#F3F6F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5C7E8F]"
@@ -336,17 +442,23 @@ export function PaperStudioEditor({
 
       {/* Textarea */}
       <div className="p-3 sm:p-4">
-        <label htmlFor="paper-studio-document-input" className="sr-only">
+        <label htmlFor={`${editorId}-document-input`} className="sr-only">
           Document text
         </label>
         <textarea
           ref={textareaRef}
-          id="paper-studio-document-input"
+          id={`${editorId}-document-input`}
+          data-paper-studio-editor="true"
           value={text}
           onChange={(e) => {
             setConfirmingClear(false);
+            syncSelectionFromEl(e.currentTarget);
             onChangeText(e.target.value, false);
           }}
+          onSelect={(e) => syncSelectionFromEl(e.currentTarget)}
+          onClick={(e) => syncSelectionFromEl(e.currentTarget)}
+          onKeyUp={(e) => syncSelectionFromEl(e.currentTarget)}
+          onFocus={(e) => syncSelectionFromEl(e.currentTarget)}
           onKeyDown={handleKeyDown}
           rows={18}
           spellCheck

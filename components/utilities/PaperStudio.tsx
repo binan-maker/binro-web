@@ -5,7 +5,6 @@ import {
   DEFAULT_STUDIO_SETTINGS,
   getPageDimensions,
   normalizeStudioSettings,
-  sanitizeExportFilename,
   type HandwritingFontId,
   type PaperStudioSettings,
 } from "@/lib/paper-studio/config";
@@ -121,12 +120,13 @@ export function PaperStudio() {
     };
   }, []);
 
-  // Ensure selected font is explicitly verified whenever fontId changes
+  // Ensure selected font and weight are explicitly verified whenever fontId or fontWeight changes
   useEffect(() => {
     let cancelled = false;
     const targetFontId = settings.fontId;
+    const targetWeight = settings.fontWeight;
 
-    ensureHandwritingFontLoaded(targetFontId).then((res) => {
+    ensureHandwritingFontLoaded(targetFontId, targetWeight).then((res) => {
       if (cancelled) return;
       setFontStatuses((prev) => {
         if (prev[targetFontId] === res.status) return prev;
@@ -142,7 +142,7 @@ export function PaperStudio() {
     return () => {
       cancelled = true;
     };
-  }, [settings.fontId]);
+  }, [settings.fontId, settings.fontWeight]);
 
   // Debounce expensive pagination updates for smooth typing on long documents
   useEffect(() => {
@@ -166,6 +166,8 @@ export function PaperStudio() {
         setUndoStack((prev) => [...prev.slice(-(MAX_UNDO_HISTORY - 1)), text]);
         setRedoStack([]);
         lastHistoryPushRef.current = now;
+      } else if (next !== text) {
+        setRedoStack([]);
       }
       setText(next);
     },
@@ -261,26 +263,35 @@ export function PaperStudio() {
     debouncedSettings.orientation
   );
 
+  const getLivePaginatedDoc = () => {
+    if (text === debouncedText && settings === debouncedSettings) {
+      return paginatedDoc;
+    }
+    return paginateDocument(text, settings, createCanvasTextMeasurer());
+  };
+
   const handleExportPdf = async () => {
     if (isExporting) return;
     setErrorMessages([]);
     revokeLastDownloadUrl();
     setLastExportSummary(null);
 
+    const exportDoc = getLivePaginatedDoc();
+    const exportSettings = settings;
     const controller = new AbortController();
     abortControllerRef.current = controller;
     setIsExporting(true);
     setExportProgress({
       stage: "loading-fonts",
       currentPage: 0,
-      totalPages: paginatedDoc.pages.length,
+      totalPages: exportDoc.pages.length,
       detail: "Preparing export...",
     });
 
     try {
       const result = await exportDocumentToPdf(
-        paginatedDoc,
-        debouncedSettings,
+        exportDoc,
+        exportSettings,
         filename,
         (prog) => setExportProgress(prog),
         controller.signal
@@ -315,8 +326,13 @@ export function PaperStudio() {
 
   const handleExportCurrentPng = async () => {
     if (isExporting) return;
-    const targetPage =
-      paginatedDoc.pages[safeCurrentPage - 1] ?? paginatedDoc.pages[0];
+    const exportDoc = getLivePaginatedDoc();
+    const exportSettings = settings;
+    const targetPageIndex = Math.min(
+      Math.max(0, safeCurrentPage - 1),
+      Math.max(0, exportDoc.pages.length - 1)
+    );
+    const targetPage = exportDoc.pages[targetPageIndex] ?? exportDoc.pages[0];
     if (!targetPage) return;
 
     setErrorMessages([]);
@@ -333,7 +349,7 @@ export function PaperStudio() {
     try {
       const result = await exportSinglePagePng(
         targetPage,
-        debouncedSettings,
+        exportSettings,
         filename
       );
       const url = URL.createObjectURL(result.blob);
@@ -359,7 +375,9 @@ export function PaperStudio() {
 
   const handleExportAllPngZip = async () => {
     if (isExporting) return;
-    if (paginatedDoc.pages.length === 1) {
+    const exportDoc = getLivePaginatedDoc();
+    const exportSettings = settings;
+    if (exportDoc.pages.length === 1) {
       await handleExportCurrentPng();
       return;
     }
@@ -374,14 +392,14 @@ export function PaperStudio() {
     setExportProgress({
       stage: "loading-fonts",
       currentPage: 0,
-      totalPages: paginatedDoc.pages.length,
+      totalPages: exportDoc.pages.length,
       detail: "Preparing PNG export...",
     });
 
     try {
       const result = await exportAllPagesAsZipPng(
-        paginatedDoc,
-        debouncedSettings,
+        exportDoc,
+        exportSettings,
         filename,
         (prog) => setExportProgress(prog),
         controller.signal
@@ -413,7 +431,10 @@ export function PaperStudio() {
 
   const handlePrint = async () => {
     setErrorMessages([]);
-    const check = await ensureHandwritingFontLoaded(debouncedSettings.fontId);
+    const check = await ensureHandwritingFontLoaded(
+      settings.fontId,
+      settings.fontWeight
+    );
     if (!check.loaded) {
       setErrorMessages([
         check.error ||
@@ -427,8 +448,6 @@ export function PaperStudio() {
   const handleCancelExport = () => {
     abortControllerRef.current?.abort();
   };
-
-  const safeFilename = sanitizeExportFilename(filename);
 
   return (
     <>
@@ -517,7 +536,7 @@ export function PaperStudio() {
               onShuffleSeed={handleShuffleSeed}
               onResetDefaults={handleResetDefaults}
               fontStatuses={fontStatuses}
-              filename={safeFilename}
+              filename={filename}
               onChangeFilename={setFilename}
               pageCount={paginatedDoc.pages.length}
               currentPageNumber={safeCurrentPage}
@@ -561,7 +580,7 @@ export function PaperStudio() {
               onShuffleSeed={handleShuffleSeed}
               onResetDefaults={handleResetDefaults}
               fontStatuses={fontStatuses}
-              filename={safeFilename}
+              filename={filename}
               onChangeFilename={setFilename}
               pageCount={paginatedDoc.pages.length}
               currentPageNumber={safeCurrentPage}
@@ -595,7 +614,7 @@ export function PaperStudio() {
               onShuffleSeed={handleShuffleSeed}
               onResetDefaults={handleResetDefaults}
               fontStatuses={fontStatuses}
-              filename={safeFilename}
+              filename={filename}
               onChangeFilename={setFilename}
               pageCount={paginatedDoc.pages.length}
               currentPageNumber={safeCurrentPage}
