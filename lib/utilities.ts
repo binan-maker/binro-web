@@ -192,6 +192,31 @@ export const UTILITY_TOOLS: UtilityTool[] = [
       "document",
     ],
   },
+  {
+    id: "text-to-handwriting",
+    name: "BinRo Paper Studio",
+    shortTitle: "Paper Studio",
+    shortDescription: "Turn typed text into handwriting-style pages.",
+    description:
+      "Turn typed text into beautifully designed handwriting-style pages, with customizable paper, fonts, ink and page layouts directly in your browser.",
+    categoryId: "text-utilities",
+    href: "/utilities/text-to-handwriting",
+    status: "available",
+    keywords: [
+      "text",
+      "handwriting",
+      "paper studio",
+      "notebook",
+      "ruled",
+      "a4",
+      "a5",
+      "letter",
+      "printable",
+      "practice",
+      "pdf",
+      "notes",
+    ],
+  },
 ];
 
 export function getUtilityCategoryById(
